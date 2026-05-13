@@ -27,9 +27,9 @@
 <meta property="og:site_name" content="Identity Defender">
 <meta property="og:title" content="Identity Defender">
 <meta property="og:description" content="Galaxian-style arcade defense. Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. Hackers don't hack in — they log in. How many can you defend?">
-<meta property="og:url" content="https://YOUR-DOMAIN.com/">
-<meta property="og:image" content="https://YOUR-DOMAIN.com/preview.png">
-<meta property="og:image:secure_url" content="https://YOUR-DOMAIN.com/preview.png">
+<meta property="og:url" content="https://identity-defenders.vercel.app/">
+<meta property="og:image" content="https://identity-defenders.vercel.app/preview.png">
+<meta property="og:image:secure_url" content="https://identity-defenders.vercel.app/preview.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -39,7 +39,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Identity Defender">
 <meta name="twitter:description" content="Galaxian-style arcade defense. Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. How many can you defend?">
-<meta name="twitter:image" content="https://YOUR-DOMAIN.com/preview.png">
+<meta name="twitter:image" content="https://identity-defenders.vercel.app/preview.png">
 <meta name="twitter:image:alt" content="Identity Defender score card">
 
 <!-- Favicon (optional — replace with your own .ico/.png if desired) -->
@@ -238,6 +238,8 @@
     color: inherit;
   }
   @media (max-width: 1020px) {
+    html, body { overflow: auto; }
+    body { align-items: flex-start; }
     .frame { width: 100%; max-width: 640px; }
     .game-area { flex-direction: column; }
     .gamewrap { flex: 0 0 auto; border-radius: 0; width: 100%; }
@@ -245,7 +247,8 @@
       border-left: none;
       border-top: 1px solid rgba(255,255,255,0.06);
       border-radius: 0 0 12px 12px;
-      max-height: 320px;
+      max-height: none;
+      overflow-y: visible;
     }
     .legend-columns { grid-template-columns: 1fr 1fr; }
   }
