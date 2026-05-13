@@ -18,7 +18,7 @@
      └──────────────────────────────────────────────────────────────────────┘ -->
 
 <!-- Standard meta -->
-<meta name="description" content="Galaxian-style arcade defense. Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. Hackers don't hack in — they log in. How many can you defend?">
+<meta name="description" content="Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. Hackers don't hack in — they log in. How many can you defend?">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0a0f24">
 
@@ -26,7 +26,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Identity Defender">
 <meta property="og:title" content="Identity Defender">
-<meta property="og:description" content="Galaxian-style arcade defense. Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. Hackers don't hack in — they log in. How many can you defend?">
+<meta property="og:description" content="Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. Hackers don't hack in — they log in. How many can you defend?">
 <meta property="og:url" content="https://identity-defenders.vercel.app/">
 <meta property="og:image" content="https://identity-defenders.vercel.app/preview.png">
 <meta property="og:image:secure_url" content="https://identity-defenders.vercel.app/preview.png">
@@ -38,7 +38,7 @@
 <!-- Twitter / X Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Identity Defender">
-<meta name="twitter:description" content="Galaxian-style arcade defense. Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. How many can you defend?">
+<meta name="twitter:description" content="Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. Hackers don't hack in — they log in. How many can you defend?">
 <meta name="twitter:image" content="https://identity-defenders.vercel.app/preview.png">
 <meta name="twitter:image:alt" content="Identity Defender score card">
 
@@ -323,6 +323,10 @@
   .legend-toggle:hover { background: rgba(255,255,255,0.1); color: var(--text); }
 
   .legend.collapsed { display: none; }
+  @media (min-width: 1021px) {
+    .legend.collapsed { display: block; }
+    .legend-toggle { display: none; }
+  }
   /* Scanlines for CRT feel */
   .gamewrap::after {
     content: "";
