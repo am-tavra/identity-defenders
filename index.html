@@ -307,6 +307,10 @@
     color: var(--accent-1);
     border-color: rgba(255,200,87,0.35);
   }
+  .touch-dpad {
+    display: flex;
+    gap: 12px;
+  }
 
   /* Legend toggle button */
   .legend-toggle {
@@ -831,9 +835,11 @@
   </div>
 
   <div class="touch-controls" id="touch-controls">
-    <button class="touch-btn" id="touch-left">&#8592;</button>
     <button class="touch-btn touch-btn-fire" id="touch-fire">FIRE</button>
-    <button class="touch-btn" id="touch-right">&#8594;</button>
+    <div class="touch-dpad">
+      <button class="touch-btn" id="touch-left">&#8592;</button>
+      <button class="touch-btn" id="touch-right">&#8594;</button>
+    </div>
   </div>
 
   <aside class="legend collapsed" id="legend" aria-label="Game legend">
