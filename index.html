@@ -600,6 +600,51 @@
     letter-spacing: 1.5px;
   }
   .name-entry button:hover { background: var(--accent-3); }
+  .email-entry-row {
+    width: 100%;
+    max-width: 260px;
+  }
+  .email-entry-row input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 8px 12px;
+    background: rgba(20,27,61,0.5);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--dim);
+    text-align: center;
+    border-radius: 4px;
+    width: 100%;
+    outline: none;
+    letter-spacing: 0.5px;
+  }
+  .email-entry-row input::placeholder { color: rgba(255,255,255,0.25); }
+  .email-entry-row input:focus {
+    border-color: rgba(255,200,87,0.4);
+    color: var(--text);
+    box-shadow: 0 0 10px rgba(255,200,87,0.15);
+  }
+
+  /* Badge pills */
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 10px 0 4px;
+  }
+  .badge-row.hidden { display: none; }
+  .badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .badge-rank-1  { background: rgba(255,200,87,0.15); border: 1px solid #FFD54F; color: #FFD54F; text-shadow: 0 0 8px rgba(255,213,79,0.5); }
+  .badge-rank-3  { background: rgba(186,104,200,0.15); border: 1px solid #BA68C8; color: #BA68C8; }
+  .badge-streak  { background: rgba(255,107,74,0.15); border: 1px solid #FF6B4A; color: #FF6B4A; }
+  .badge-veteran { background: rgba(79,195,247,0.12); border: 1px solid #4FC3F7; color: #4FC3F7; }
 
   .leaderboard {
     background: rgba(13,18,48,0.55);
@@ -621,8 +666,8 @@
   }
   .lb-row {
     display: grid;
-    grid-template-columns: 22px 1fr 80px 30px;
-    gap: 8px;
+    grid-template-columns: 22px 1fr 80px 22px 22px;
+    gap: 6px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     padding: 4px 2px;
@@ -643,6 +688,7 @@
   .lb-row .lb-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .lb-row .lb-score { color: var(--accent-1); text-align: right; font-weight: 700; }
   .lb-row .lb-wave  { color: var(--dim); text-align: right; font-size: 9px; }
+  .lb-row .lb-badge { font-size: 13px; text-align: center; line-height: 1; }
   .lb-empty {
     text-align: center;
     font-family: 'JetBrains Mono', monospace;
@@ -748,11 +794,16 @@
       <div class="final-score">IDs PROTECTED: <span id="final-score">0</span></div>
       <div class="final-wave">REACHED QTR <span id="final-wave">1</span></div>
 
+      <div class="badge-row hidden" id="badge-row"></div>
+
       <div class="name-entry hidden" id="name-entry">
         <label>ENTER YOUR HANDLE</label>
         <div class="name-entry-row">
           <input type="text" id="name-input" maxlength="12" placeholder="ANON" autocomplete="off" spellcheck="false" />
           <button id="submit-name-btn">SAVE</button>
+        </div>
+        <div class="email-entry-row">
+          <input type="email" id="email-input" placeholder="email (optional · saves your streak)" autocomplete="email" />
         </div>
       </div>
 
@@ -1176,50 +1227,139 @@ function sfxAlert()       { beep(440, 0.1, 'square', 0.05); setTimeout(()=>beep(
 // ===========================================================================
 // SCORE PERSISTENCE + SHARING
 // ===========================================================================
-const STORAGE_KEY  = 'authmind_defender_scores_v1';
-const MAX_SCORES   = 10;
+// ===========================================================================
+// SUPABASE CONFIG
+// ===========================================================================
+const SUPABASE_URL  = 'https://jkisqvocmcoureqdzpvm.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpraXNxdm9jbWNvdXJlcWR6cHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2OTU0NTUsImV4cCI6MjA5NDI3MTQ1NX0.VaogUZB80FbuWlBNBQWXcCJ2IDs6KR-jlog-0RS-dUM';
+const MAX_SCORES    = 10;
 const DISPLAY_COUNT = 5;
 
-function loadScores() {
+let cachedScores = [];
+let cachedPlayer = null;
+
+function sbHeaders(extra = {}) {
+  return { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json', ...extra };
+}
+async function sbGet(path) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) { return []; }
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: sbHeaders() });
+    return r.ok ? r.json() : [];
+  } catch { return []; }
 }
-function saveScores(scores) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scores)); } catch (e) { /* unavailable */ }
+async function sbPost(path, body) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method: 'POST', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(body) });
+    return r.ok ? r.json() : null;
+  } catch { return null; }
 }
+async function sbPatch(path, body) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method: 'PATCH', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(body) });
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+}
+
+function getPlayerToken() {
+  let t = localStorage.getItem('id_defender_token');
+  if (!t) { t = crypto.randomUUID(); localStorage.setItem('id_defender_token', t); }
+  return t;
+}
+
+async function fetchTopScores() {
+  const rows = await sbGet('scores?select=name,score,wave,players(streak_days,total_plays)&order=score.desc&limit=' + MAX_SCORES);
+  return Array.isArray(rows) ? rows.map(r => ({
+    name: r.name, score: r.score, wave: r.wave,
+    streak_days: r.players?.streak_days || 0,
+    total_plays: r.players?.total_plays || 0
+  })) : [];
+}
+
+async function fetchPlayer(token) {
+  const rows = await sbGet(`players?token=eq.${encodeURIComponent(token)}&limit=1`);
+  return Array.isArray(rows) && rows.length ? rows[0] : null;
+}
+
+async function upsertPlayer(token, name, score) {
+  const existing = await fetchPlayer(token);
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  let streak = 1;
+  if (existing) {
+    if (existing.last_played_date === today) streak = existing.streak_days;
+    else if (existing.last_played_date === yesterday) streak = (existing.streak_days || 0) + 1;
+  }
+  const payload = {
+    name, streak_days: streak, last_played_date: today,
+    best_score: existing ? Math.max(existing.best_score || 0, score) : score,
+    total_plays: (existing?.total_plays || 0) + 1
+  };
+  if (existing) {
+    const rows = await sbPatch(`players?token=eq.${encodeURIComponent(token)}`, payload);
+    return Array.isArray(rows) && rows.length ? rows[0] : { ...existing, ...payload };
+  } else {
+    const rows = await sbPost('players', { token, ...payload });
+    return Array.isArray(rows) && rows.length ? rows[0] : { token, ...payload };
+  }
+}
+
+async function insertScore(playerId, name, score, wave) {
+  await sbPost('scores', { player_id: playerId, name, score, wave });
+}
+
+async function insertLead(playerId, email) {
+  await sbPost('leads', { player_id: playerId, email, source: 'score_save' });
+}
+
+function computeBadges(player, globalRank) {
+  const badges = [];
+  const streak = player?.streak_days || 0;
+  const plays  = player?.total_plays || 0;
+  if (globalRank === 1) badges.push({ cls: 'badge-rank-1', label: '👑 #1 DEFENDER' });
+  else if (globalRank <= 3) badges.push({ cls: 'badge-rank-3', label: '⭐ TOP 3' });
+  if (streak >= 30) badges.push({ cls: 'badge-streak', label: '🔥🔥🔥 30-DAY STREAK' });
+  else if (streak >= 7) badges.push({ cls: 'badge-streak', label: '🔥🔥 7-DAY STREAK' });
+  else if (streak >= 3) badges.push({ cls: 'badge-streak', label: '🔥 3-DAY STREAK' });
+  if (plays >= 10) badges.push({ cls: 'badge-veteran', label: '🛡 VETERAN' });
+  return badges;
+}
+
+function renderBadgeRow(badges) {
+  const row = document.getElementById('badge-row');
+  if (!badges.length) { row.classList.add('hidden'); return; }
+  row.innerHTML = badges.map(b => `<span class="badge ${b.cls}">${b.label}</span>`).join('');
+  row.classList.remove('hidden');
+}
+
 function isHighScore(score) {
   if (score <= 0) return false;
-  const scores = loadScores();
-  if (scores.length < MAX_SCORES) return true;
-  return score > scores[scores.length - 1].score;
+  if (cachedScores.length < MAX_SCORES) return true;
+  return score > cachedScores[cachedScores.length - 1].score;
 }
 function isTopScore(score) {
-  // True only if this score is the new #1 — used for the "NEW HIGH SCORE" badge.
   if (score <= 0) return false;
-  const scores = loadScores();
-  if (scores.length === 0) return true;
-  return score > scores[0].score;
-}
-function recordScore(name, score, wave) {
-  const scores = loadScores();
-  const cleaned = (name || 'ANON').toUpperCase().replace(/\s+/g, ' ').trim().substring(0, 12) || 'ANON';
-  scores.push({ name: cleaned, score, wave, date: Date.now() });
-  scores.sort((a, b) => b.score - a.score);
-  scores.splice(MAX_SCORES);
-  saveScores(scores);
-  return scores;
+  if (cachedScores.length === 0) return true;
+  return score > cachedScores[0].score;
 }
 function topScore() {
-  const scores = loadScores();
-  return scores.length > 0 ? scores[0].score : 0;
+  return cachedScores.length > 0 ? cachedScores[0].score : 0;
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-function renderLeaderboard(highlightIndex = -1, scoresOverride = null) {
-  const scores = scoresOverride || loadScores();
+function streakIcon(streak) {
+  if (streak >= 30) return '🔥🔥🔥';
+  if (streak >= 7)  return '🔥🔥';
+  if (streak >= 3)  return '🔥';
+  return '';
+}
+function rankIcon(rank) {
+  if (rank === 1) return '👑';
+  if (rank <= 3)  return '⭐';
+  return '';
+}
+function renderLeaderboard(highlightName = null) {
+  const scores = cachedScores;
   const container = document.getElementById('leaderboard-rows');
   const wrapper   = document.getElementById('leaderboard');
   wrapper.classList.remove('hidden');
@@ -1228,12 +1368,14 @@ function renderLeaderboard(highlightIndex = -1, scoresOverride = null) {
     return;
   }
   container.innerHTML = scores.slice(0, DISPLAY_COUNT).map((s, i) => {
-    const isYou = i === highlightIndex;
+    const isYou = highlightName && s.name === highlightName;
     return `<div class="lb-row rank-${i+1}${isYou ? ' you' : ''}">
       <span class="lb-rank">${i+1}</span>
       <span class="lb-name">${escapeHtml(s.name)}</span>
       <span class="lb-score">${s.score.toLocaleString()}</span>
       <span class="lb-wave">Q${s.wave}</span>
+      <span class="lb-badge">${rankIcon(i+1)}</span>
+      <span class="lb-badge">${streakIcon(s.streak_days)}</span>
     </div>`;
   }).join('');
 }
@@ -1360,12 +1502,10 @@ async function generateShareCard() {
   cx.shadowBlur = 0;
 
   // Subtitle: quarter + handle
-  const scores = loadScores();
-  const myEntry = scores.find(s => s.score === game.score && s.date && (Date.now() - s.date < 60000));
   cx.font = "16px 'Press Start 2P', monospace";
   cx.fillStyle = '#FF6B4A';
   let subtitle = `REACHED QUARTER ${game.wave}`;
-  if (myEntry) subtitle += `  ·  DEFENDED BY ${myEntry.name}`;
+  if (cachedPlayer?.name) subtitle += `  ·  DEFENDED BY ${cachedPlayer.name}`;
   cx.fillText(subtitle, W/2, 420);
 
   // Tagline
@@ -1381,6 +1521,30 @@ async function generateShareCard() {
     cx.shadowBlur = 14;
     cx.fillText(`\u25B6 PLAY  \u00B7  ${GAME_URL}`, W/2, 560);
     cx.shadowBlur = 0;
+  }
+
+  // Top badge on card (if player has one)
+  if (cachedPlayer) {
+    const globalRank = cachedScores.findIndex(s => s.name === cachedPlayer.name) + 1 || 99;
+    const badges = computeBadges(cachedPlayer, globalRank);
+    if (badges.length) {
+      const badgeText = badges[0].label;
+      cx.font = "bold 14px 'Press Start 2P', monospace";
+      const bw = cx.measureText(badgeText).width + 28;
+      const bx = W - bw - 28, by = H - 44;
+      cx.fillStyle = 'rgba(10,15,36,0.75)';
+      cx.beginPath();
+      cx.roundRect(bx, by, bw, 28, 14);
+      cx.fill();
+      cx.strokeStyle = 'rgba(255,200,87,0.5)';
+      cx.lineWidth = 1;
+      cx.stroke();
+      cx.fillStyle = '#FFC857';
+      cx.shadowColor = '#FFC857';
+      cx.shadowBlur = 8;
+      cx.fillText(badgeText, bx + bw / 2, by + 19);
+      cx.shadowBlur = 0;
+    }
   }
 
   // Corner sprites
@@ -1483,14 +1647,21 @@ async function copyCardToClipboard() {
     return { ok: false, reason: e && e.name === 'NotAllowedError' ? 'blocked' : 'error' };
   }
 }
-function submitName() {
-  const input = document.getElementById('name-input');
-  const name = (input.value || '').trim() || 'ANON';
-  const scores = recordScore(name, game.score, game.wave);
-  // Find this exact entry to highlight
-  const idx = scores.findIndex(s => s.score === game.score && s.name === name.toUpperCase().substring(0, 12));
+async function submitName() {
+  const nameInput  = document.getElementById('name-input');
+  const emailInput = document.getElementById('email-input');
+  const name  = ((nameInput.value || '').trim() || 'ANON').toUpperCase().replace(/\s+/g, ' ').trim().substring(0, 12) || 'ANON';
+  const email = (emailInput.value || '').trim();
   document.getElementById('name-entry').classList.add('hidden');
-  renderLeaderboard(idx, scores);
+  const token  = getPlayerToken();
+  cachedPlayer = await upsertPlayer(token, name, game.score);
+  await insertScore(cachedPlayer.id, name, game.score, game.wave);
+  if (email) await insertLead(cachedPlayer.id, email);
+  cachedScores = await fetchTopScores();
+  const globalRank = cachedScores.findIndex(s => s.name === name && s.score === game.score) + 1 || 99;
+  const badges = computeBadges(cachedPlayer, globalRank);
+  renderBadgeRow(badges);
+  renderLeaderboard(name);
   updateTitleBest();
   showShareCardPreview();
 }
@@ -2795,39 +2966,54 @@ function togglePause() {
   }
 }
 
-function gameOver() {
+async function gameOver() {
   game.state = STATE.GAMEOVER;
   updateMobileUI(STATE.GAMEOVER);
   finalScoreEl.textContent = game.score.toLocaleString();
   finalWaveEl.textContent = game.wave;
-  const newRecordEl = document.getElementById('new-record-badge');
-  const nameEntryEl = document.getElementById('name-entry');
+  const newRecordEl   = document.getElementById('new-record-badge');
+  const nameEntryEl   = document.getElementById('name-entry');
   const leaderboardEl = document.getElementById('leaderboard');
   const cardPreviewEl = document.getElementById('card-preview');
+  const badgeRowEl    = document.getElementById('badge-row');
   newRecordEl.classList.add('hidden');
   nameEntryEl.classList.add('hidden');
   leaderboardEl.classList.add('hidden');
   cardPreviewEl.classList.add('hidden');
-  // "NEW HIGH SCORE" badge only for actual #1 scores
-  if (isTopScore(game.score)) {
-    newRecordEl.classList.remove('hidden');
+  badgeRowEl.classList.add('hidden');
+  gameoverScreen.classList.remove('hidden');
+
+  cachedScores = await fetchTopScores();
+
+  // Show returning player's existing badges immediately
+  const token = getPlayerToken();
+  const existing = await fetchPlayer(token);
+  if (existing) {
+    cachedPlayer = existing;
+    const preRank = cachedScores.findIndex(s => s.score <= existing.best_score) + 1 || 99;
+    renderBadgeRow(computeBadges(existing, preRank));
   }
-  // Name entry for any top-10 placement
+
+  if (isTopScore(game.score)) newRecordEl.classList.remove('hidden');
+
   if (isHighScore(game.score)) {
+    const nameInput = document.getElementById('name-input');
+    const emailInput = document.getElementById('email-input');
+    nameInput.value = existing?.name || '';
+    emailInput.value = '';
     nameEntryEl.classList.remove('hidden');
-    const input = document.getElementById('name-input');
-    input.value = '';
-    setTimeout(() => input.focus(), 100);
-    // Card preview generated after handle is submitted (so handle is on the card)
+    setTimeout(() => nameInput.focus(), 100);
   } else {
     renderLeaderboard();
     showShareCardPreview();
   }
-  gameoverScreen.classList.remove('hidden');
 }
 
 // Kick off
 loop();
+
+// Load global top scores for title screen best display
+fetchTopScores().then(s => { cachedScores = s; updateTitleBest(); });
 
 // On mobile title screen: show legend open by default
 if (isTouchDevice()) {
