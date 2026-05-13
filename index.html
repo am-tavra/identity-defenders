@@ -999,6 +999,9 @@
 // └──────────────────────────────────────────────────────────────────────────┘
 const GAME_URL = 'https://bit.ly/identity-defender';
 
+let cachedScores = [];
+let cachedPlayer = null;
+
 const CANVAS_W = 640;
 const CANVAS_H = 720;
 const TRUST_BOUNDARY_Y = 280;   // LOTL impostors reveal below this line
@@ -1234,9 +1237,6 @@ const SUPABASE_URL  = 'https://jkisqvocmcoureqdzpvm.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpraXNxdm9jbWNvdXJlcWR6cHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2OTU0NTUsImV4cCI6MjA5NDI3MTQ1NX0.VaogUZB80FbuWlBNBQWXcCJ2IDs6KR-jlog-0RS-dUM';
 const MAX_SCORES    = 10;
 const DISPLAY_COUNT = 5;
-
-let cachedScores = [];
-let cachedPlayer = null;
 
 function sbHeaders(extra = {}) {
   return { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json', ...extra };
