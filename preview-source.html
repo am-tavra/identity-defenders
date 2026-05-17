@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+  background: #07091a;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+}
+
+/* Background gradient + grid */
+.bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 30%, #1a2253 0%, #07091a 70%);
+}
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(100,130,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100,130,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Glowing border */
+.border-glow {
+  position: absolute;
+  inset: 0;
+  border: 2px solid transparent;
+  border-image: linear-gradient(135deg, #FFC857, #FF6B4A, #E94A88, #4FC3F7) 1;
+  pointer-events: none;
+}
+
+/* Left panel — game logo */
+.left {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 560px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 56px 60px;
+}
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 40px;
+  line-height: 1.4;
+  background: linear-gradient(90deg, #FFC857, #FF6B4A, #E94A88);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 24px;
+  letter-spacing: 1px;
+}
+
+.tagline {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1.5px;
+  line-height: 1.8;
+  margin-bottom: 36px;
+}
+.tagline span { color: #E94A88; }
+
+.cta {
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #E94A88, #FF6B4A);
+  color: white;
+  border-radius: 6px;
+  letter-spacing: 1.5px;
+  box-shadow: 0 0 30px rgba(233,74,136,0.5);
+}
+
+/* Right panel — threat grid */
+.right {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 640px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 56px 48px 32px;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  gap: 10px;
+}
+
+.threats-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #4FC3F7;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(79,195,247,0.2);
+}
+
+.threat {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.threat-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  flex: 1;
+}
+.threat-pts {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  margin: 4px 0;
+}
+
+.warn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #FF6B4A;
+  letter-spacing: 1px;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* Scanline overlay */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0.08) 0px,
+    rgba(0,0,0,0.08) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+}
+
+/* Corner accents */
+.corner {
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: rgba(255,200,87,0.4);
+  border-style: solid;
+}
+.corner-tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+.corner-tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+.corner-bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+.corner-br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="grid"></div>
+<div class="scanlines"></div>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<div class="left">
+  <div class="eyebrow">Identity Security · Browser Game</div>
+  <div class="title">IDENTITY<br>DEFENDER</div>
+  <div class="tagline">HACKERS DON'T HACK IN<br><span>·</span> THEY LOG IN</div>
+  <div class="cta">PLAY FREE →</div>
+</div>
+
+<div class="right">
+  <div class="threats-label">Threats</div>
+
+  <div class="threat">
+    <div class="dot" style="background:#4FC3F7;box-shadow:0 0 6px #4FC3F7;"></div>
+    <span class="threat-name">Shadow IT</span>
+    <span class="threat-pts">30–60 pts</span>
+  </div>
+  <div class="threat">
+    <div class="dot" style="background:#BA68C8;box-shadow:0 0 6px #BA68C8;"></div>
+    <span class="threat-name">Compromised Credentials</span>
+    <span class="threat-pts">40–80 pts</span>
+  </div>
+  <div class="threat">
+    <div class="dot" style="background:#FF7043;box-shadow:0 0 6px #FF7043;"></div>
+    <span class="threat-name">Rogue NHI</span>
+    <span class="threat-pts">50–100 pts</span>
+  </div>
+  <div class="threat">
+    <div class="dot" style="background:#FFD54F;box-shadow:0 0 6px #FFD54F;"></div>
+    <span class="threat-name">Rogue AI Agent</span>
+    <span class="threat-pts">800 pt combo</span>
+  </div>
+  <div class="threat">
+    <div class="dot" style="background:#66BB6A;box-shadow:0 0 6px #66BB6A;"></div>
+    <span class="threat-name">LOTL Impostor</span>
+    <span class="threat-pts">Read movement</span>
+  </div>
+  <div class="threat">
+    <div class="dot" style="background:#EF5350;box-shadow:0 0 6px #EF5350;"></div>
+    <span class="threat-name">Scattered Spider Raid</span>
+    <span class="threat-pts">Clear all 5</span>
+  </div>
+
+  <div class="divider"></div>
+  <div class="warn">⚠ Don't shoot sanctioned users  −200 penalty</div>
+</div>
+
+</body>
+</html>
