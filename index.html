@@ -311,6 +311,9 @@
     display: flex;
     gap: 12px;
   }
+  .touch-only { display: none; }
+  body.touch-device .key-only { display: none; }
+  body.touch-device .touch-only { display: flex; }
 
   /* Legend toggle button */
   .legend-toggle {
@@ -783,9 +786,11 @@
           Defend the identity perimeter. Shoot threats. Don't shoot sanctioned users.
           Read attacker intent — observe what identities actually do.
         </div>
-        <div class="row"><span class="key">← →</span><span class="desc">Move sentinel</span></div>
-        <div class="row"><span class="key">SPACE</span><span class="desc">Fire policy enforcement</span></div>
-        <div class="row"><span class="key">P</span><span class="desc">Pause / resume</span></div>
+        <div class="row key-only"><span class="key">← →</span><span class="desc">Move sentinel</span></div>
+        <div class="row key-only"><span class="key">SPACE</span><span class="desc">Fire policy enforcement</span></div>
+        <div class="row key-only"><span class="key">P</span><span class="desc">Pause / resume</span></div>
+        <div class="row touch-only"><span class="key">◀ ▶</span><span class="desc">Tap to move</span></div>
+        <div class="row touch-only"><span class="key">FIRE</span><span class="desc">Tap to fire</span></div>
       </div>
       <button class="start-btn" id="start-btn">INITIATE DEFENSE</button>
     </div>
@@ -1146,7 +1151,9 @@ const legendEl = document.getElementById('legend');
 const legendToggleBtn = document.getElementById('legend-toggle');
 
 function isTouchDevice() {
-  return window.matchMedia('(pointer: coarse)').matches;
+  return ('ontouchstart' in window) ||
+         (navigator.maxTouchPoints > 0) ||
+         window.matchMedia('(pointer: coarse)').matches;
 }
 
 function showTouchControls(show) {
@@ -3028,6 +3035,7 @@ fetchTopScores().then(s => { cachedScores = s; updateTitleBest(); }).catch(() =>
 
 // On mobile title screen: show legend open by default
 if (isTouchDevice()) {
+  document.body.classList.add('touch-device');
   legendEl.classList.remove('collapsed');
   legendToggleBtn.textContent = 'HIDE';
 }

@@ -25,6 +25,8 @@ Read movement, not appearance. Don't shoot sanctioned users (−200 penalty).
 | `P` | Pause / resume |
 | `Enter` | Start / restart |
 
+On mobile/tablet, on-screen touch controls appear automatically.
+
 The game starts with **INITIATE OBSERVABILITY** — shoot the 5 system icons (On-Prem, Cloud, Human, NHI, AI Agent) to enable full visibility before threats begin.
 
 Play through Quarters (waves) of increasing difficulty. High scores are saved locally in your browser.
