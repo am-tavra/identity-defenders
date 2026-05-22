@@ -1270,8 +1270,8 @@ async function sbPatch(path, body) {
 }
 
 function getPlayerToken() {
-  let t = localStorage.getItem('id_defender_token');
-  if (!t) { t = crypto.randomUUID(); localStorage.setItem('id_defender_token', t); }
+  let t = localStorage.getItem('id_defender_token_v1');
+  if (!t) { t = crypto.randomUUID(); localStorage.setItem('id_defender_token_v1', t); }
   return t;
 }
 
@@ -1667,7 +1667,9 @@ async function submitName() {
   await insertScore(cachedPlayer.id, name, game.score, game.wave);
   if (email) await insertLead(cachedPlayer.id, email);
   cachedScores = await fetchTopScores();
-  const globalRank = cachedScores.findIndex(s => s.name === name && s.score === game.score) + 1 || 99;
+  const globalRank = (cachedPlayer?.id
+    ? cachedScores.findIndex(s => s.player_id === cachedPlayer.id)
+    : cachedScores.findIndex(s => s.name === name && s.score === game.score)) + 1 || 99;
   const badges = computeBadges(cachedPlayer, globalRank);
   renderBadgeRow(badges);
   renderLeaderboard(name);
