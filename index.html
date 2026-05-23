@@ -650,7 +650,13 @@
   .badge-rank-1  { background: rgba(255,200,87,0.15); border: 1px solid #FFD54F; color: #FFD54F; text-shadow: 0 0 8px rgba(255,213,79,0.5); }
   .badge-rank-3  { background: rgba(186,104,200,0.15); border: 1px solid #BA68C8; color: #BA68C8; }
   .badge-streak  { background: rgba(255,107,74,0.15); border: 1px solid #FF6B4A; color: #FF6B4A; }
-  .badge-veteran { background: rgba(79,195,247,0.12); border: 1px solid #4FC3F7; color: #4FC3F7; }
+  .badge-veteran   { background: rgba(79,195,247,0.12);  border: 1px solid #4FC3F7; color: #4FC3F7; }
+  .badge-precision { background: rgba(76,175,80,0.12);  border: 1px solid #81C784; color: #C8E6C9; }
+  .badge-marksman  { background: rgba(255,193,7,0.14);  border: 1px solid #FFC107; color: #FFE082; }
+  .badge-pattern   { background: rgba(186,104,200,0.14);border: 1px solid #BA68C8; color: #E1BEE7; }
+  .badge-responder { background: rgba(255,107,74,0.14); border: 1px solid #FF6B4A; color: #FFAB91; }
+  .badge-chain     { background: rgba(255,213,79,0.14); border: 1px solid #FFD54F; color: #FFE082; text-shadow: 0 0 6px rgba(255,213,79,0.4); }
+  .badge-coverage  { background: rgba(79,195,247,0.12); border: 1px solid #4FC3F7; color: #B3E5FC; }
 
   .leaderboard {
     background: rgba(13,18,48,0.55);
@@ -1324,15 +1330,25 @@ async function upsertPlayer(token, name, score) {
   }
 }
 
-async function insertScore(playerId, name, score, wave) {
-  await sbPost('scores', { player_id: playerId, name, score, wave });
+async function insertScore(playerId, name, score, wave, stats) {
+  await sbPost('scores', {
+    player_id: playerId,
+    name, score, wave,
+    sanctioned_kills:    stats?.sanctionedKills    ?? 0,
+    shots_fired:         stats?.shotsFired         ?? 0,
+    shots_hit:           stats?.shotsHit           ?? 0,
+    max_hit_streak:      stats?.maxHitStreak       ?? 0,
+    fastest_quarter_sec: stats?.fastestQuarterSec  ?? null,
+    ai_combos:           stats?.aiCombos           ?? 0,
+    threat_types_mask:   stats?.threatTypesMask    ?? 0
+  });
 }
 
 async function insertLead(playerId, email) {
   await sbPost('leads', { player_id: playerId, email, source: 'score_save' });
 }
 
-function computeBadges(player, globalRank) {
+function computeBadges(player, globalRank, runStats) {
   const badges = [];
   const streak = player?.streak_days || 0;
   const plays  = player?.total_plays || 0;
@@ -1342,6 +1358,27 @@ function computeBadges(player, globalRank) {
   else if (streak >= 7) badges.push({ cls: 'badge-streak', label: '🔥🔥 7-DAY STREAK' });
   else if (streak >= 3) badges.push({ cls: 'badge-streak', label: '🔥 3-DAY STREAK' });
   if (plays >= 10) badges.push({ cls: 'badge-veteran', label: '🛡 VETERAN' });
+  if (runStats) {
+    const s = runStats;
+    if (s.sanctionedKills === 0 && s.shotsFired >= 10) {
+      badges.push({ cls: 'badge-precision', label: '🎯 ZERO FALSE POSITIVES' });
+    }
+    if (s.shotsFired >= 50 && (s.shotsHit / s.shotsFired) >= 0.85) {
+      badges.push({ cls: 'badge-marksman', label: '🏹 MARKSMAN' });
+    }
+    if (s.maxHitStreak >= 20) {
+      badges.push({ cls: 'badge-pattern', label: '🧬 PATTERN MATCH' });
+    }
+    if (s.fastestQuarterSec != null && s.fastestQuarterSec < 30) {
+      badges.push({ cls: 'badge-responder', label: '⚡ FIRST RESPONDER' });
+    }
+    if (s.aiCombos >= 3) {
+      badges.push({ cls: 'badge-chain', label: '🔗 CHAIN OF TRUST' });
+    }
+    if ((s.threatTypesMask & 63) === 63) {
+      badges.push({ cls: 'badge-coverage', label: '🛰 THREAT COVERAGE' });
+    }
+  }
   return badges;
 }
 
@@ -1547,7 +1584,7 @@ async function generateShareCard() {
   // Top badge on card (if player has one)
   if (cachedPlayer) {
     const globalRank = cachedScores.findIndex(s => s.name === cachedPlayer.name) + 1 || 99;
-    const badges = computeBadges(cachedPlayer, globalRank);
+    const badges = computeBadges(cachedPlayer, globalRank, null);
     if (badges.length) {
       const badgeText = badges[0].label;
       cx.font = "bold 14px 'Press Start 2P', 'Courier New', monospace";
@@ -1676,13 +1713,13 @@ async function submitName() {
   document.getElementById('name-entry').classList.add('hidden');
   const token  = getPlayerToken();
   cachedPlayer = await upsertPlayer(token, name, game.score);
-  await insertScore(cachedPlayer.id, name, game.score, game.wave);
+  await insertScore(cachedPlayer.id, name, game.score, game.wave, game.stats);
   if (email) await insertLead(cachedPlayer.id, email);
   cachedScores = await fetchTopScores();
   const globalRank = (cachedPlayer?.id
     ? cachedScores.findIndex(s => s.player_id === cachedPlayer.id)
     : cachedScores.findIndex(s => s.name === name && s.score === game.score)) + 1 || 99;
-  const badges = computeBadges(cachedPlayer, globalRank);
+  const badges = computeBadges(cachedPlayer, globalRank, game.stats);
   renderBadgeRow(badges);
   renderLeaderboard(name);
   updateTitleBest();
@@ -1723,6 +1760,7 @@ function tryFire() {
   if (game.bullets.length >= maxBullets) return;
   ensureAudio();
   game.bullets.push({ x: game.player.x, y: game.player.y - 12, vy: -20, w: 3, h: 16 });
+  if (game.state === STATE.PLAYING) game.stats.shotsFired++;
   game.player.cooldown = isPUActive('PAM') ? 4 : 0;
   game.firePending = false;
   sfxShoot();
@@ -2248,13 +2286,23 @@ function handleEnemyHit(e, b) {
     spawnParticles(e.x, e.y, 8, '#A5D6A7');
     e.markedForRemoval = true;
     sfxHit();
+    game.stats.shotsHit++;
+    game.stats.sanctionedKills++;
+    game.stats.hitStreak = 0;
     return;
   }
+  game.stats.shotsHit++;
+  game.stats.hitStreak++;
+  if (game.stats.hitStreak > game.stats.maxHitStreak) game.stats.maxHitStreak = game.stats.hitStreak;
+  const THREAT_BIT = { DRONE:1, CRED:2, NHI:4, AGENT:8, LOTL:16, SCATTERED:32 };
+  const bit = THREAT_BIT[e.type] || 0;
+  if (bit) game.stats.threatTypesMask |= bit;
   // Score
   const def = ENEMY[e.type];
   let pts;
   if (e.type === 'AGENT') {
     pts = scoreAgentKill(e);
+    if (pts === 800) game.stats.aiCombos++;
   } else {
     pts = (e.state === 'FORMATION') ? def.formationPts : def.divePts;
   }
@@ -2386,6 +2434,7 @@ function updateWarmup() {
       if (game.state === STATE.WARMUP) {
         game.state = STATE.PLAYING;
         buildWave(1);
+        game.quarterStartedAt = performance.now();
       }
     }, 1900);
   }
@@ -2435,6 +2484,13 @@ function checkWaveComplete() {
 }
 
 function advanceWave() {
+  if (game.quarterStartedAt != null) {
+    const elapsedSec = (performance.now() - game.quarterStartedAt) / 1000;
+    if (game.stats.fastestQuarterSec == null || elapsedSec < game.stats.fastestQuarterSec) {
+      game.stats.fastestQuarterSec = Math.round(elapsedSec);
+    }
+    game.quarterStartedAt = null;
+  }
   game.state = STATE.TRANSITION;
   game.transitionTimer = 120;
   game.wave++;
@@ -2444,6 +2500,7 @@ function advanceWave() {
   setTimeout(() => {
     if (game.state === STATE.TRANSITION) {
       buildWave(game.wave);
+      game.quarterStartedAt = performance.now();
       maybeTriggerSpiderRaid();
       game.state = STATE.PLAYING;
     }
@@ -2968,6 +3025,17 @@ function startGame() {
   game._spiderTriggeredOnWave = null;
   game.diveTimer = 80;
   game.spawnTimer = 300;
+  game.stats = {
+    sanctionedKills:   0,
+    shotsFired:        0,
+    shotsHit:          0,
+    hitStreak:         0,
+    maxHitStreak:      0,
+    fastestQuarterSec: null,
+    aiCombos:          0,
+    threatTypesMask:   0
+  };
+  game.quarterStartedAt = null;
   game.player = createPlayer();
   buildWarmup();
   titleScreen.classList.add('hidden');
@@ -3015,7 +3083,7 @@ async function gameOver() {
   if (existing) {
     cachedPlayer = existing;
     const preRank = cachedScores.findIndex(s => s.score <= existing.best_score) + 1 || 99;
-    renderBadgeRow(computeBadges(existing, preRank));
+    renderBadgeRow(computeBadges(existing, preRank, null));
   }
 
   if (isTopScore(game.score)) newRecordEl.classList.remove('hidden');
