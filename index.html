@@ -127,6 +127,21 @@
   .hud .value { color: var(--accent-1); }
   .hud .value.lives { color: var(--accent-3); }
   .hud .value.wave  { color: var(--accent-2); }
+  .combo-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-left: 14px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255,200,87,0.08);
+    border: 1px solid rgba(255,200,87,0.25);
+    font-size: 9px;
+  }
+  .combo-pill.hidden { display: none; }
+  .combo-pill .combo-label { color: var(--dim); }
+  .combo-pill .combo-count { color: var(--text); }
+  .combo-pill .combo-mult  { color: var(--accent-1); font-weight: bold; }
+  .combo-pill.boost-2     { background: rgba(255,107,74,0.12); border-color: rgba(255,107,74,0.45); animation: combo-pulse 1.1s ease-in-out infinite; }
+  @keyframes combo-pulse { 0%,100% { box-shadow: 0 0 0 rgba(255,107,74,0); } 50% { box-shadow: 0 0 10px rgba(255,107,74,0.45); } }
 
   .gamewrap {
     position: relative;
@@ -740,6 +755,16 @@
     text-shadow: 0 0 12px rgba(255,200,87,0.4);
   }
   .title-best.hidden { display: none; }
+  .streak-line {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    margin-bottom: 14px;
+    letter-spacing: 1.2px;
+  }
+  .streak-line.urgent { color: var(--accent-3); text-shadow: 0 0 12px rgba(233,74,136,0.45); animation: pulse 1.4s ease-in-out infinite; }
+  .streak-line.hidden { display: none; }
+  .streak-line .num { color: var(--accent-1); }
 
   .card-preview {
     width: 100%;
@@ -763,6 +788,23 @@
     outline: 2px solid var(--accent-1, #ffd166);
     outline-offset: 3px;
   }
+  .dossier-modal { position: absolute; inset: 0; background: rgba(7,9,26,0.86); backdrop-filter: blur(4px); z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .dossier-modal.hidden { display: none; }
+  .dossier-card { background: linear-gradient(180deg, #0d1230, #0a0f24); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; width: 100%; max-width: 540px; max-height: 88%; overflow-y: auto; padding: 18px 20px; position: relative; }
+  .dossier-card h2 { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 11px; color: var(--accent-1); margin-bottom: 14px; letter-spacing: 1.5px; }
+  .dossier-close { position: absolute; top: 10px; right: 12px; background: transparent; border: none; color: var(--dim); font-size: 18px; cursor: pointer; padding: 4px 8px; }
+  .dossier-close:hover { color: var(--accent-3); }
+  .dossier-entry { display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .dossier-entry:last-child { border-bottom: none; }
+  .dossier-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: rgba(255,255,255,0.04); }
+  .dossier-name { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 10px; color: var(--text); margin-bottom: 4px; }
+  .dossier-class { font-size: 9px; color: var(--dim); margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+  .dossier-desc { font-size: 11px; line-height: 1.6; color: var(--text); margin-bottom: 4px; }
+  .dossier-resp { font-size: 11px; color: var(--accent-2); margin-bottom: 4px; }
+  .dossier-resp::before { content: 'RESPONSE · '; color: var(--dim); font-size: 9px; }
+  .dossier-kills { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; color: var(--accent-1); margin-top: 4px; }
+  .intel-btn { margin-top: 10px; background: linear-gradient(135deg, #0d1230, #1a2253); color: var(--accent-1); border: 1px solid var(--accent-1); box-shadow: 0 0 10px rgba(255,200,87,0.2); animation: none; }
+  .intel-btn:hover { background: rgba(255,200,87,0.1); }
 </style>
 </head>
 <body>
@@ -770,6 +812,12 @@
   <div class="hud">
     <div class="group">
       <div><span class="label">IDs PROTECTED:</span> <span class="value" id="score">0</span></div>
+      <div class="combo-pill hidden" id="combo-pill">
+        <span class="combo-label">STREAK</span>
+        <span class="combo-count" id="combo-count">0</span>
+        <span class="combo-sep">·</span>
+        <span class="combo-mult" id="combo-mult">x1.0</span>
+      </div>
     </div>
     <div class="group">
       <div><span class="label">SENTINELS:</span> <span class="value lives" id="lives">3</span></div>
@@ -790,6 +838,7 @@
       <div class="title-main">IDENTITY<br>DEFENDER</div>
       <div class="tagline">HACKERS DON'T HACK IN <span>·</span> THEY LOG IN</div>
       <div class="title-best hidden" id="title-best">PERSONAL BEST · <span id="title-best-score">0</span></div>
+      <div class="streak-line hidden" id="title-streak"></div>
       <div class="briefing">
         <h3>BRIEFING</h3>
         <div style="margin-bottom: 12px; color: var(--text);">
@@ -803,6 +852,15 @@
         <div class="row touch-only"><span class="key">FIRE</span><span class="desc">Tap to fire</span></div>
       </div>
       <button class="start-btn" id="start-btn">INITIATE DEFENSE</button>
+      <button class="start-btn intel-btn" id="intel-btn">📋 THREAT INTEL</button>
+    </div>
+
+    <div class="dossier-modal hidden" id="dossier-modal" role="dialog" aria-modal="true" aria-labelledby="dossier-title">
+      <div class="dossier-card" role="document">
+        <button class="dossier-close" id="dossier-close" aria-label="Close">✕</button>
+        <h2 id="dossier-title">THREAT INTEL</h2>
+        <div class="dossier-list" id="dossier-list"></div>
+      </div>
     </div>
 
     <!-- Game over screen -->
@@ -1022,6 +1080,7 @@ const GAME_URL = 'https://rb.gy/3s19b3';
 
 let cachedScores = [];
 let cachedPlayer = null;
+let titleCountdownTimer = null;
 
 const CANVAS_W = 640;
 const CANVAS_H = 720;
@@ -1105,9 +1164,15 @@ const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
 const alertEl = document.getElementById('alert');
 const puTrayEl = document.getElementById('pu-tray');
+const intelBtn = document.getElementById('intel-btn');
+const dossierModal = document.getElementById('dossier-modal');
 
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
+intelBtn.addEventListener('click', openDossier);
+document.getElementById('dossier-close').addEventListener('click', closeDossier);
+dossierModal.addEventListener('click', onDossierBackdrop);
+window.addEventListener('keydown', onDossierEsc);
 
 // Score system + sharing wiring
 document.getElementById('submit-name-btn').addEventListener('click', submitName);
@@ -1316,10 +1381,15 @@ async function upsertPlayer(token, name, score) {
     if (existing.last_played_date === today) streak = existing.streak_days;
     else if (existing.last_played_date === yesterday) streak = (existing.streak_days || 0) + 1;
   }
+  const prevKills = (existing && existing.kills_by_type) || {};
+  const runKills  = (game.stats && game.stats.killsByType) || {};
+  const mergedKills = { ...prevKills };
+  for (const k of Object.keys(runKills)) mergedKills[k] = (mergedKills[k] || 0) + runKills[k];
   const payload = {
     name, streak_days: streak, last_played_date: today,
     best_score: existing ? Math.max(existing.best_score || 0, score) : score,
-    total_plays: (existing?.total_plays || 0) + 1
+    total_plays: (existing?.total_plays || 0) + 1,
+    kills_by_type: mergedKills
   };
   if (existing) {
     const rows = await sbPatch(`players?token=eq.${encodeURIComponent(token)}`, payload);
@@ -1448,6 +1518,94 @@ function updateTitleBest() {
     wrap.classList.add('hidden');
   }
 }
+function utcDateString(d) { return new Date(d).toISOString().split('T')[0]; }
+function msUntilEndOfUTCDay() {
+  const now = new Date();
+  const eod = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  return eod - now.getTime();
+}
+function fmtHMS(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = String(Math.floor(s / 3600)).padStart(2,'0');
+  const m = String(Math.floor((s % 3600) / 60)).padStart(2,'0');
+  const ss = String(s % 60).padStart(2,'0');
+  return `${h}:${m}:${ss}`;
+}
+function tickTitleCountdown() {
+  const el = document.getElementById('title-streak');
+  if (!el || !cachedPlayer) return;
+  const today     = utcDateString(Date.now());
+  const yesterday = utcDateString(Date.now() - 86400000);
+  const last      = cachedPlayer.last_played_date;
+  const streak    = cachedPlayer.streak_days || 0;
+  el.classList.remove('hidden', 'urgent');
+  if (last === today) {
+    el.innerHTML = `STREAK · <span class="num">${streak}</span> DAYS · SAFE · ${fmtHMS(msUntilEndOfUTCDay())} until tomorrow`;
+  } else if (last === yesterday) {
+    el.innerHTML = `STREAK · <span class="num">${streak}</span> DAYS · ${fmtHMS(msUntilEndOfUTCDay())} TO PROTECT`;
+    el.classList.add('urgent');
+  } else {
+    el.innerHTML = `STREAK · <span class="num">0</span>`;
+  }
+}
+function startTitleCountdown() {
+  stopTitleCountdown();
+  tickTitleCountdown();
+  titleCountdownTimer = setInterval(tickTitleCountdown, 1000);
+}
+function stopTitleCountdown() {
+  if (titleCountdownTimer) { clearInterval(titleCountdownTimer); titleCountdownTimer = null; }
+}
+const DOSSIER = [
+  { type:'DRONE', color:'#4FC3F7', glow:'#81D4FA', name:'Shadow IT', klass:'Unmanaged endpoint',
+    desc:'Drones spun up outside the IT-sanctioned identity perimeter. They look like normal traffic but operate without policy enforcement, evading audit and DLP.',
+    resp:'Eliminate on sight — every unmanaged drone is a policy gap.' },
+  { type:'CRED', color:'#BA68C8', glow:'#CE93D8', name:'Compromised Credential', klass:'Stolen identity',
+    desc:'A valid login wielded by the wrong human. Behavior is the only tell — they fail upward, probing systems the real user never touches.',
+    resp:'Burn it down before it pivots; rotate downstream secrets.' },
+  { type:'NHI', color:'#FF7043', glow:'#FFAB91', name:'Rogue NHI', klass:'Non-human identity',
+    desc:'Service accounts, OAuth tokens, and machine keys turned hostile. NHIs outnumber humans 45:1 and rarely have MFA — when they escort an AI agent, kill them first for the combo.',
+    resp:'Take out NHI escorts before the flagship to chain a +800 takedown.' },
+  { type:'AGENT', color:'#FFD54F', glow:'#FFE082', name:'Rogue AI Agent', klass:'Autonomous threat',
+    desc:'The flagship target. Solo kill is 150; with two NHI escorts neutralized first, the combo pays 800. AI agents reason — assume they will pivot if you flinch.',
+    resp:'Strip the escort NHIs, then commit to the flagship kill in one pass.' },
+  { type:'LOTL', color:'#66BB6A', glow:'#A5D6A7', name:'LOTL Impostor', klass:'Living-off-the-land',
+    desc:'Looks identical to a sanctioned user until it crosses the trust boundary. Watch for the flicker — a 0.5-second tell before the disguise drops. Catching one pre-reveal pays 300 and may drop GRAPH.',
+    resp:'Read the flicker. Fire before the disguise drops; never fire after a clean sanctioned scan.' },
+  { type:'SCATTERED', color:'#E94A88', glow:'#F48FB1', name:'Scattered Spider', klass:'Coordinated raid',
+    desc:'Help-desk vishing crews running in packs of five. They orbit and saturate fire — clear the whole raid inside the timer or the wave re-spawns.',
+    resp:'Prioritize the raid the moment the alert fires; nothing else matters until they are all down.' }
+];
+function dossierIconSvg(d) {
+  const s = d.color, g = d.glow;
+  if (d.type === 'DRONE')   return `<svg viewBox="-12 -12 24 24" width="32" height="32"><polygon points="0,-9 10,8 -10,8" fill="${s}" style="filter:drop-shadow(0 0 4px ${g})"/></svg>`;
+  if (d.type === 'CRED')    return `<svg viewBox="-12 -12 24 24" width="32" height="32"><polygon points="-10,-4 -5,-9 5,-9 10,-4 5,9 -5,9" fill="${s}" style="filter:drop-shadow(0 0 4px ${g})"/></svg>`;
+  if (d.type === 'NHI')     return `<svg viewBox="-12 -12 24 24" width="32" height="32"><polygon points="0,-10 11,8 0,3 -11,8" fill="${s}" style="filter:drop-shadow(0 0 4px ${g})"/></svg>`;
+  if (d.type === 'AGENT')   return `<svg viewBox="-14 -14 28 28" width="32" height="32"><polygon points="0,-12 12,0 0,12 -12,0" fill="${s}" style="filter:drop-shadow(0 0 4px ${g})"/><circle cx="0" cy="0" r="3" fill="#0a0f24"/></svg>`;
+  if (d.type === 'LOTL')    return `<svg viewBox="-12 -12 24 24" width="32" height="32"><circle cx="0" cy="0" r="9" fill="${s}" style="filter:drop-shadow(0 0 4px ${g})"/></svg>`;
+  if (d.type === 'SCATTERED') return `<svg viewBox="-14 -14 28 28" width="32" height="32"><polygon points="0,-12 4,-4 12,0 4,4 0,12 -4,4 -12,0 -4,-4" fill="${s}" style="filter:drop-shadow(0 0 4px ${g})"/></svg>`;
+  return '';
+}
+function renderDossierEntries() {
+  const kills = (cachedPlayer && cachedPlayer.kills_by_type) || {};
+  const list = document.getElementById('dossier-list');
+  list.innerHTML = DOSSIER.map(d => `
+    <div class="dossier-entry">
+      <div class="dossier-icon">${dossierIconSvg(d)}</div>
+      <div>
+        <div class="dossier-name">${d.name}</div>
+        <div class="dossier-class">${d.klass}</div>
+        <div class="dossier-desc">${d.desc}</div>
+        <div class="dossier-resp">${d.resp}</div>
+        <div class="dossier-kills">ELIMINATED · ${kills[d.type] || 0}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function openDossier()  { renderDossierEntries(); dossierModal.classList.remove('hidden'); document.getElementById('dossier-close').focus(); }
+function closeDossier() { dossierModal.classList.add('hidden'); intelBtn.focus(); }
+function onDossierBackdrop(e) { if (e.target === dossierModal) closeDossier(); }
+function onDossierEsc(e) { if (e.key === 'Escape' && !dossierModal.classList.contains('hidden')) closeDossier(); }
 function buildShareText() {
   const base = `Quarter ${game.wave} · ${game.score.toLocaleString()} IDs protected\n\nHackers don't hack in — they log in.`;
   return GAME_URL ? `${base}\n\n${GAME_URL}` : base;
@@ -1921,6 +2079,8 @@ function updateLOTL(e) {
     if (e.y > CANVAS_H + 30) e.markedForRemoval = true;
     return;
   }
+  const trigger = isPUActive('GRAPH') ? 120 : TRUST_BOUNDARY_Y;
+  e.aboutToReveal = (e.y > trigger - 21) && (e.y <= trigger);
   if (isPUActive('GRAPH')) {
     // Identity Graph: force reveal early
     if (e.y > 120) revealLOTL(e);
@@ -2297,6 +2457,7 @@ function handleEnemyHit(e, b) {
   const THREAT_BIT = { DRONE:1, CRED:2, NHI:4, AGENT:8, LOTL:16, SCATTERED:32 };
   const bit = THREAT_BIT[e.type] || 0;
   if (bit) game.stats.threatTypesMask |= bit;
+  game.stats.killsByType[e.type] = (game.stats.killsByType[e.type] || 0) + 1;
   // Score
   const def = ENEMY[e.type];
   let pts;
@@ -2311,6 +2472,7 @@ function handleEnemyHit(e, b) {
     pts = 300; // pre-reveal observability bonus
     showAlert('★ LOTL CAUGHT EARLY +300');
   }
+  pts = Math.round(pts * comboMultiplier(game.stats.hitStreak));
   // Observability multiplier
   if (isPUActive('OBSERV')) pts *= 2;
   game.score += pts;
@@ -2332,6 +2494,14 @@ function handleEnemyHit(e, b) {
   if (e.type === 'AGENT' && pts >= 300) dropPowerup(e.x, e.y); // big flagship kill
   else if (e.type === 'LOTL' && pts === 300) dropPowerup(e.x, e.y, chance(0.5) ? 'GRAPH' : null);
   else if (chance(0.04)) dropPowerup(e.x, e.y);
+}
+
+function comboMultiplier(streak) {
+  if (streak >= 20) return 2.0;
+  if (streak >= 15) return 1.75;
+  if (streak >= 10) return 1.5;
+  if (streak >= 5)  return 1.2;
+  return 1.0;
 }
 
 function scoreAgentKill(e) {
@@ -2367,6 +2537,7 @@ function playerHit() {
     return;
   }
   game.lives--;
+  if (game.stats) game.stats.hitStreak = 0;
   game.player.hitFlash = 30;
   game.shake = 12;
   sfxPlayerHit();
@@ -2672,7 +2843,14 @@ function drawEnemy(e) {
     ctx.fill();
   } else if (e.type === 'LOTL') {
     if (e.state === 'LOTL_DISGUISED') {
-      // Looks innocent — small circle with check
+      let dx = 0;
+      if (e.aboutToReveal && !e.isSanctioned) {
+        const tick = Math.floor(performance.now() / 80);
+        dx = (tick % 2 === 0) ? 1.5 : -1.5;
+      }
+      ctx.save();
+      ctx.translate(dx, 0);
+      ctx.beginPath();
       ctx.arc(e.x, e.y, 9, 0, Math.PI*2);
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -2683,6 +2861,7 @@ function drawEnemy(e) {
       ctx.lineTo(e.x-1, e.y+3);
       ctx.lineTo(e.x+4, e.y-3);
       ctx.stroke();
+      ctx.restore();
     } else {
       // Revealed — jagged
       ctx.moveTo(e.x, e.y - 12);
@@ -2965,7 +3144,19 @@ function drawSystemIcon(ctx, id, x, y, outline) {
 function updateHUD() {
   scoreEl.textContent = game.score.toLocaleString();
   livesEl.textContent = game.lives;
-  waveEl.textContent = game.wave;
+  waveEl.textContent  = game.wave;
+  const streak = game.stats?.hitStreak || 0;
+  const pill   = document.getElementById('combo-pill');
+  if (!pill) return;
+  if (streak < 5) {
+    pill.classList.add('hidden');
+  } else {
+    const m = comboMultiplier(streak);
+    document.getElementById('combo-count').textContent = streak;
+    document.getElementById('combo-mult').textContent  = 'x' + (m === 1.2 ? '1.2' : m === 1.5 ? '1.5' : m === 1.75 ? '1.75' : '2.0');
+    pill.classList.toggle('boost-2', m >= 2.0);
+    pill.classList.remove('hidden');
+  }
 }
 
 // ===========================================================================
@@ -3033,12 +3224,14 @@ function startGame() {
     maxHitStreak:      0,
     fastestQuarterSec: null,
     aiCombos:          0,
-    threatTypesMask:   0
+    threatTypesMask:   0,
+    killsByType:       {}
   };
   game.quarterStartedAt = null;
   game.player = createPlayer();
   buildWarmup();
   titleScreen.classList.add('hidden');
+  stopTitleCountdown();
   gameoverScreen.classList.add('hidden');
   pauseScreen.classList.add('hidden');
   game.state = STATE.WARMUP;
@@ -3106,6 +3299,13 @@ loop();
 
 // Load global top scores for title screen best display
 fetchTopScores().then(s => { cachedScores = s; updateTitleBest(); }).catch(() => {});
+fetchPlayer(getPlayerToken()).then(p => {
+  if (!p) return;
+  cachedPlayer = p;
+  if (!titleScreen.classList.contains('hidden')) {
+    startTitleCountdown();
+  }
+}).catch(() => {});
 
 // On mobile title screen: show legend open by default
 if (isTouchDevice()) {
