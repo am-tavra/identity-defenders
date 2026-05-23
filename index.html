@@ -1287,8 +1287,9 @@ function getPlayerToken() {
 }
 
 async function fetchTopScores() {
-  const rows = await sbGet('scores?select=name,score,wave,players(streak_days,total_plays)&order=score.desc&limit=' + MAX_SCORES);
+  const rows = await sbGet('scores?select=player_id,name,score,wave,players(streak_days,total_plays)&order=score.desc&limit=' + MAX_SCORES);
   return Array.isArray(rows) ? rows.map(r => ({
+    player_id: r.player_id,
     name: r.name, score: r.score, wave: r.wave,
     streak_days: r.players?.streak_days || 0,
     total_plays: r.players?.total_plays || 0
