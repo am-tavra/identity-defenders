@@ -25,7 +25,7 @@
 <!-- Open Graph (LinkedIn, Facebook, Slack, Discord, iMessage, etc.) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Identity Defender">
-<meta property="og:title" content="Identity Defender">
+<meta property="og:title" content="Identity Defender — Hackers don't hack in, they log in">
 <meta property="og:description" content="Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. Hackers don't hack in — they log in. How many can you defend?">
 <meta property="og:url" content="https://identity-defenders.vercel.app/">
 <meta property="og:image" content="https://identity-defenders.vercel.app/preview.png">
@@ -33,11 +33,11 @@
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Identity Defender score card — IDs protected, quarter reached, defender handle">
+<meta property="og:image:alt" content="Identity Defender — arcade game about identity threat protection">
 
 <!-- Twitter / X Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Identity Defender">
+<meta name="twitter:title" content="Identity Defender — Hackers don't hack in, they log in">
 <meta name="twitter:description" content="Stop rogue AI agents, LOTL impostors, and Scattered Spider raids. Hackers don't hack in — they log in. How many can you defend?">
 <meta name="twitter:image" content="https://identity-defenders.vercel.app/preview.png">
 <meta name="twitter:image:alt" content="Identity Defender score card">
@@ -72,7 +72,7 @@
     background-image: radial-gradient(ellipse at top, #1a2253 0%, #07091a 80%);
     background-attachment: fixed;
     color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
   }
@@ -116,7 +116,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 9px;
     letter-spacing: 0.5px;
     color: var(--text);
@@ -142,7 +142,7 @@
     border-left: 1px solid rgba(255,255,255,0.06);
     padding: 14px 14px 16px;
     color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
     overflow-y: auto;
     max-height: 720px;
     border-radius: 0 0 12px 0;
@@ -154,7 +154,7 @@
     background: rgba(255,255,255,0.15); border-radius: 3px;
   }
   .legend h4 {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 8px;
     letter-spacing: 1.5px;
     color: var(--accent-2);
@@ -219,7 +219,7 @@
     width: 26px; height: 26px;
     border-radius: 3px;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
     font-size: 12px;
     font-weight: 700;
     color: #0a0f24;
@@ -281,7 +281,7 @@
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 10px;
     color: var(--text);
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 18px;
     width: 80px;
     height: 64px;
@@ -317,7 +317,7 @@
 
   /* Legend toggle button */
   .legend-toggle {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 8px;
     padding: 5px 10px;
     background: rgba(255,255,255,0.05);
@@ -377,7 +377,7 @@
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 6px;
     padding: 4px 8px;
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 7px;
     color: var(--text);
     display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -414,7 +414,7 @@
   .overlay.hidden { display: none; }
 
   .title-main {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 26px;
     background: linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3));
     -webkit-background-clip: text; background-clip: text;
@@ -424,7 +424,7 @@
     letter-spacing: 1px;
   }
   .tagline {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 10px;
     color: var(--dim);
     margin-bottom: 28px;
@@ -444,7 +444,7 @@
     color: var(--text);
   }
   .briefing h3 {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 9px;
     color: var(--accent-2);
     margin-bottom: 10px;
@@ -452,7 +452,7 @@
   }
   .briefing .row { display: flex; gap: 12px; margin: 4px 0; }
   .briefing .key {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 8px;
     background: var(--bg-edge);
     padding: 3px 6px;
@@ -464,7 +464,7 @@
   .briefing .desc { color: var(--dim); }
 
   .start-btn {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 12px;
     padding: 14px 28px;
     background: linear-gradient(135deg, var(--accent-2), var(--accent-3));
@@ -487,24 +487,24 @@
   }
 
   .gameover-title {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 20px;
     color: var(--red);
     text-shadow: 0 0 16px rgba(255,112,67,0.5);
     line-height: 1.4;
   }
   .gameover-sub {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 8px;
     color: var(--dim);
   }
   .final-score {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 13px;
     color: var(--accent-1);
   }
   .final-wave {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 10px;
     color: var(--accent-2);
   }
@@ -517,7 +517,7 @@
     color: white;
     padding: 10px 24px;
     border-radius: 4px;
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 10px;
     z-index: 4;
     letter-spacing: 1px;
@@ -544,7 +544,7 @@
 
   /* New record + leaderboard + share */
   .new-record-badge {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 11px;
     color: var(--accent-1);
     background: rgba(255,200,87,0.1);
@@ -570,14 +570,14 @@
   }
   .name-entry.hidden { display: none; }
   .name-entry label {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 9px;
     color: var(--accent-2);
     letter-spacing: 1.5px;
   }
   .name-entry-row { display: flex; gap: 8px; align-items: center; }
   .name-entry input {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 12px;
     padding: 9px 12px;
     background: rgba(20,27,61,0.7);
@@ -595,7 +595,7 @@
     box-shadow: 0 0 14px rgba(255,107,74,0.4);
   }
   .name-entry button {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 9px;
     padding: 10px 16px;
     background: var(--accent-2);
@@ -611,7 +611,7 @@
     max-width: 260px;
   }
   .email-entry-row input {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
     font-size: 10px;
     padding: 8px 12px;
     background: rgba(20,27,61,0.5);
@@ -640,7 +640,7 @@
   }
   .badge-row.hidden { display: none; }
   .badge {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 7px;
     padding: 5px 10px;
     border-radius: 20px;
@@ -663,7 +663,7 @@
   }
   .leaderboard.hidden { display: none; }
   .leaderboard h4 {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 9px;
     color: var(--accent-1);
     margin-bottom: 8px;
@@ -674,7 +674,7 @@
     display: grid;
     grid-template-columns: 22px 1fr 80px 22px 22px;
     gap: 6px;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
     font-size: 11px;
     padding: 4px 2px;
     align-items: center;
@@ -697,7 +697,7 @@
   .lb-row .lb-badge { font-size: 13px; text-align: center; line-height: 1; }
   .lb-empty {
     text-align: center;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
     font-size: 10px;
     color: var(--dim);
     padding: 14px 0 4px;
@@ -709,7 +709,7 @@
     margin-bottom: 14px;
   }
   .share-btn {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 9px;
     padding: 10px 16px;
     background: rgba(20,27,61,0.7);
@@ -726,7 +726,7 @@
     color: var(--accent-1);
   }
   .title-best {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     font-size: 10px;
     color: var(--accent-1);
     margin-bottom: 22px;
@@ -753,6 +753,10 @@
   .card-preview.hidden { display: none; }
   .share-row { flex-wrap: wrap; justify-content: center; }
   .share-btn { padding: 10px 12px; }
+  button:focus-visible, input:focus-visible, .share-btn:focus-visible, .start-btn:focus-visible {
+    outline: 2px solid var(--accent-1, #ffd166);
+    outline-offset: 3px;
+  }
 </style>
 </head>
 <body>
@@ -869,7 +873,7 @@
         </svg>
       </div>
       <div class="legend-text">
-        <div class="legend-name">Compromised Cred</div>
+        <div class="legend-name">Compromised Credentials</div>
         <div class="legend-pts">40 / 80 · wide zig-zag</div>
       </div>
     </div>
@@ -977,7 +981,7 @@
     <div class="legend-row">
       <div class="legend-icon"><div class="pu-icon" style="background:#FF6B4A;color:#FF6B4A"><span>O</span></div></div>
       <div class="legend-text">
-        <div class="legend-name">Observ Boost</div>
+        <div class="legend-name">Observability Boost</div>
         <div class="legend-pts">2× score · 15s</div>
       </div>
     </div>
@@ -1407,8 +1411,8 @@ function updateTitleBest() {
   }
 }
 function buildShareText() {
-  const base = `I protected ${game.score.toLocaleString()} Identities in Identity Defender, reaching Quarter ${game.wave}! 🛡️ Hackers don't hack in — they log in. How many can you defend?`;
-  return GAME_URL ? `${base} ${GAME_URL}` : base;
+  const base = `Quarter ${game.wave} · ${game.score.toLocaleString()} IDs protected\n\nHackers don't hack in — they log in.`;
+  return GAME_URL ? `${base}\n\n${GAME_URL}` : base;
 }
 function copyToClipboard(text) {
   if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
@@ -1497,7 +1501,7 @@ async function generateShareCard() {
   cx.strokeRect(10, 10, W - 20, H - 20);
 
   // Top brand bar — centered
-  cx.font = "24px 'Press Start 2P', monospace";
+  cx.font = "24px 'Press Start 2P', 'Courier New', monospace";
   cx.fillStyle = '#FFC857';
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
@@ -1505,12 +1509,12 @@ async function generateShareCard() {
 
   // Pre-score label
   cx.textAlign = 'center';
-  cx.font = "18px 'Press Start 2P', monospace";
+  cx.font = "18px 'Press Start 2P', 'Courier New', monospace";
   cx.fillStyle = '#8A9AC8';
   cx.fillText('IDENTITIES PROTECTED', W/2, 200);
 
   // Hero score number (glowing gold)
-  cx.font = "bold 150px 'JetBrains Mono', monospace";
+  cx.font = "bold 150px 'JetBrains Mono', 'Menlo', 'Consolas', monospace";
   cx.fillStyle = '#FFC857';
   cx.shadowColor = '#FFC857';
   cx.shadowBlur = 40;
@@ -1518,20 +1522,20 @@ async function generateShareCard() {
   cx.shadowBlur = 0;
 
   // Subtitle: quarter + handle
-  cx.font = "16px 'Press Start 2P', monospace";
+  cx.font = "16px 'Press Start 2P', 'Courier New', monospace";
   cx.fillStyle = '#FF6B4A';
   let subtitle = `REACHED QUARTER ${game.wave}`;
   if (cachedPlayer?.name) subtitle += `  ·  DEFENDED BY ${cachedPlayer.name}`;
   cx.fillText(subtitle, W/2, 420);
 
   // Tagline
-  cx.font = "italic 22px 'JetBrains Mono', monospace";
+  cx.font = "italic 22px 'JetBrains Mono', 'Menlo', 'Consolas', monospace";
   cx.fillStyle = '#E6ECFF';
   cx.fillText('"Hackers don\u2019t hack in \u2014 they log in."', W/2, 490);
 
   // Call-to-action URL (centered between corner sprites)
   if (GAME_URL) {
-    cx.font = "bold 18px 'JetBrains Mono', monospace";
+    cx.font = "bold 18px 'JetBrains Mono', 'Menlo', 'Consolas', monospace";
     cx.fillStyle = '#FFC857';
     cx.shadowColor = '#FFC857';
     cx.shadowBlur = 14;
@@ -1545,7 +1549,7 @@ async function generateShareCard() {
     const badges = computeBadges(cachedPlayer, globalRank);
     if (badges.length) {
       const badgeText = badges[0].label;
-      cx.font = "bold 14px 'Press Start 2P', monospace";
+      cx.font = "bold 14px 'Press Start 2P', 'Courier New', monospace";
       const bw = cx.measureText(badgeText).width + 28;
       const bx = W - bw - 28, by = H - 44;
       cx.fillStyle = 'rgba(10,15,36,0.75)';
@@ -2548,7 +2552,7 @@ function drawTrustBoundary() {
   ctx.setLineDash([]);
   if (isPUActive('GRAPH')) {
     ctx.fillStyle = 'rgba(186,104,200,0.7)';
-    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.font = '8px "Press Start 2P", "Courier New", monospace';
     ctx.fillText('// TRUST BOUNDARY · GRAPH ACTIVE', 12, TRUST_BOUNDARY_Y - 6);
   }
 }
@@ -2684,7 +2688,7 @@ function drawPowerup(p) {
   ctx.fillStyle = '#0a0f24';
   ctx.fillRect(-7, -7, 14, 14);
   ctx.fillStyle = def.color;
-  ctx.font = 'bold 9px "JetBrains Mono", monospace';
+  ctx.font = 'bold 9px "JetBrains Mono", "Menlo", "Consolas", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.rotate(-p.age * 0.03);
@@ -2755,21 +2759,21 @@ function drawWarmup() {
   ctx.save();
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = "18px 'Press Start 2P', monospace";
+  ctx.font = "18px 'Press Start 2P', 'Courier New', monospace";
   ctx.fillStyle = '#FFC857';
   ctx.shadowColor = '#FFC857';
   ctx.shadowBlur = 14;
   ctx.fillText('INITIATE OBSERVABILITY', W/2, 130);
   ctx.shadowBlur = 0;
   // Subtitle
-  ctx.font = "9px 'Press Start 2P', monospace";
+  ctx.font = "9px 'Press Start 2P', 'Courier New', monospace";
   ctx.fillStyle = '#8A9AC8';
   ctx.fillText('SHOOT EACH SYSTEM TO ENABLE FULL VISIBILITY', W/2, 165);
   // Progress
   const activated = game.warmupTargets.filter(t => t.activated).length;
   const total = game.warmupTargets.length;
   const allOn = activated === total;
-  ctx.font = "11px 'Press Start 2P', monospace";
+  ctx.font = "11px 'Press Start 2P', 'Courier New', monospace";
   ctx.fillStyle = allOn ? '#FFC857' : '#E6ECFF';
   if (allOn) {
     ctx.shadowColor = '#FFC857';
@@ -2795,11 +2799,11 @@ function drawWarmupTarget(t) {
     drawSystemIcon(ctx, t.id, tx, ty, false);
     ctx.shadowBlur = 0;
     // Label + status
-    ctx.font = "8px 'Press Start 2P', monospace";
+    ctx.font = "8px 'Press Start 2P', 'Courier New', monospace";
     ctx.fillStyle = t.color;
     ctx.textAlign = 'center';
     ctx.fillText(t.label, tx, ty + 50);
-    ctx.font = "7px 'Press Start 2P', monospace";
+    ctx.font = "7px 'Press Start 2P', 'Courier New', monospace";
     ctx.fillStyle = '#81C784';
     ctx.fillText('\u25CF ONLINE', tx, ty + 64);
   } else {
@@ -2809,11 +2813,11 @@ function drawWarmupTarget(t) {
     ctx.lineWidth = 2;
     drawSystemIcon(ctx, t.id, tx, ty, true);
     ctx.globalAlpha = 1;
-    ctx.font = "8px 'Press Start 2P', monospace";
+    ctx.font = "8px 'Press Start 2P', 'Courier New', monospace";
     ctx.fillStyle = '#8A9AC8';
     ctx.textAlign = 'center';
     ctx.fillText(t.label, tx, ty + 50);
-    ctx.font = "7px 'Press Start 2P', monospace";
+    ctx.font = "7px 'Press Start 2P', 'Courier New', monospace";
     ctx.fillStyle = '#FF6B4A';
     ctx.fillText('\u25CB OFFLINE', tx, ty + 64);
   }
@@ -3000,6 +3004,7 @@ async function gameOver() {
   cardPreviewEl.classList.add('hidden');
   badgeRowEl.classList.add('hidden');
   gameoverScreen.classList.remove('hidden');
+  document.getElementById('download-card-btn').style.display = game.score > 0 ? '' : 'none';
 
   cachedScores = await fetchTopScores();
 
