@@ -805,6 +805,37 @@
   .dossier-kills { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; color: var(--accent-1); margin-top: 4px; }
   .intel-btn { margin-top: 10px; background: linear-gradient(135deg, #0d1230, #1a2253); color: var(--accent-1); border: 1px solid var(--accent-1); box-shadow: 0 0 10px rgba(255,200,87,0.2); animation: none; }
   .intel-btn:hover { background: rgba(255,200,87,0.1); }
+  .daily-btn {
+    background: linear-gradient(135deg, #1a2253, #2b1f3d);
+    border-color: var(--accent-3);
+    color: var(--text);
+    box-shadow: 0 0 18px rgba(233,74,136,0.3);
+  }
+  .daily-btn:hover { background: rgba(233,74,136,0.15); }
+  .daily-date { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 11px; color: var(--accent-1); letter-spacing: 1.5px; margin-bottom: 6px; }
+  .daily-seed { font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace; font-size: 10px; color: var(--dim); margin-bottom: 10px; }
+  .daily-modifier { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 9px; color: var(--accent-2); margin-bottom: 6px; letter-spacing: 1px; line-height: 1.5; }
+  .daily-weekly { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; color: var(--accent-2); margin-bottom: 10px; letter-spacing: 1px; }
+  .daily-note { font-size: 10px; color: var(--dim); margin-bottom: 14px; font-style: italic; }
+  .daily-lb-header { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 9px; color: var(--accent-1); margin-bottom: 8px; letter-spacing: 1.5px; }
+  .daily-lb { margin-bottom: 14px; max-height: 200px; overflow-y: auto; }
+  .daily-lb-row { display: grid; grid-template-columns: 22px 1fr 80px 22px; gap: 8px; font-size: 11px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .daily-lb-row .lb-rank { color: var(--accent-1); font-family: 'Press Start 2P', monospace; font-size: 9px; }
+  .daily-lb-row .lb-name { color: var(--text); }
+  .daily-lb-row .lb-score { color: var(--accent-1); text-align: right; }
+  .daily-lb-row .lb-wave { color: var(--dim); text-align: right; }
+  .daily-empty { color: var(--dim); font-size: 10px; font-style: italic; padding: 8px 0; }
+  .daily-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .daily-reset { font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace; font-size: 9px; color: var(--dim); }
+  .hud-mode-badge {
+    position: absolute; top: 8px; right: 10px;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 9px; color: var(--accent-3);
+    padding: 4px 8px; border: 1px solid var(--accent-3);
+    border-radius: 4px; background: rgba(7,9,26,0.7);
+    z-index: 5; letter-spacing: 1px;
+  }
+  .hud-mode-badge.hidden { display: none; }
   .title-weekly { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; color: var(--accent-2); margin-bottom: 8px; letter-spacing: 1px; }
   .title-weekly.hidden { display: none; }
   .modifier-card {
@@ -925,7 +956,8 @@
         <div class="row touch-only"><span class="key">◀ ▶</span><span class="desc">Tap to move</span></div>
         <div class="row touch-only"><span class="key">FIRE</span><span class="desc">Tap to fire</span></div>
       </div>
-      <button class="start-btn" id="start-btn">INITIATE DEFENSE</button>
+      <button class="start-btn daily-btn" id="daily-btn">📡 DAILY BRIEFING</button>
+      <button class="start-btn" id="start-btn">FREE PLAY</button>
       <button class="start-btn intel-btn" id="intel-btn">📋 THREAT INTEL</button>
       <button class="start-btn intel-btn" id="loadout-btn">🎯 LOADOUT</button>
     </div>
@@ -951,6 +983,25 @@
       </div>
     </div>
 
+    <div class="dossier-modal hidden" id="daily-modal" role="dialog" aria-modal="true" aria-labelledby="daily-title">
+      <div class="dossier-card" role="document">
+        <button class="dossier-close" id="daily-close" aria-label="Close">✕</button>
+        <h2 id="daily-title">DAILY THREAT BRIEFING</h2>
+        <div class="daily-date" id="daily-date"></div>
+        <div class="daily-seed" id="daily-seed"></div>
+        <div class="daily-modifier" id="daily-modifier"></div>
+        <div class="daily-weekly" id="daily-weekly"></div>
+        <div class="daily-note">Loadout disabled. Same challenge for everyone today.</div>
+        <h3 class="daily-lb-header">TODAY'S TOP DEFENDERS</h3>
+        <div class="daily-lb" id="daily-lb-rows"></div>
+        <div class="daily-actions">
+          <span class="daily-reset" id="daily-reset"></span>
+          <button class="start-btn" id="daily-play-btn">PLAY DAILY</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-mode-badge hidden" id="hud-mode-badge"></div>
     <div class="live-ticker hidden" id="live-ticker"></div>
 
     <!-- Game over screen -->
@@ -1268,7 +1319,7 @@ function computeDefenderRank(player) {
 }
 
 function rollModifier() {
-  return MODIFIERS[Math.floor(Math.random() * MODIFIERS.length)];
+  return MODIFIERS[Math.floor(game.rngFn() * MODIFIERS.length)];
 }
 
 function isoWeekNumber(d = new Date()) {
@@ -1302,11 +1353,23 @@ function rollModifierAvoidingWeeklyConflict(weekly) {
   return m;
 }
 
+function dailyInsiderWaves(seed) {
+  const r = mulberry32(seed ^ 0x9E3779B1);
+  const waves = [];
+  for (let w = 3; w <= 15; w++) {
+    if (r() < 0.05) waves.push(w);
+  }
+  return waves;
+}
+
 function maybeArmInsiderEvent() {
   if (!game.insiderEvent) return;
   if (game.wave < 3) return;
   if (game.insiderEvent.active) return;
-  if (!chance(0.05)) return;
+  const trigger = (game.mode === 'daily')
+    ? (game.dailyInsiderWaves || []).includes(game.wave)
+    : chance(0.05);
+  if (!trigger) return;
   game.insiderEvent.active = true;
   game.insiderEvent.deadline = performance.now() + 60_000;
   game.insiderEvent.armed = true;
@@ -1356,7 +1419,12 @@ const game = {
   flagshipComboCounter: { escortsKilled: 0, parentId: null },
   warmupTargets: [],
   warmupComplete: false,
-  warmupCompletedAt: 0
+  warmupCompletedAt: 0,
+  rngFn: Math.random,
+  mode: 'free',
+  dailySeed: null,
+  dailyDateStr: null,
+  dailyInsiderWaves: null
 };
 
 // ===========================================================================
@@ -1381,9 +1449,14 @@ const puTrayEl = document.getElementById('pu-tray');
 const intelBtn = document.getElementById('intel-btn');
 const dossierModal = document.getElementById('dossier-modal');
 
-startBtn.addEventListener('click', startGame);
-restartBtn.addEventListener('click', startGame);
+startBtn.addEventListener('click', () => startGame('free'));
+restartBtn.addEventListener('click', () => startGame(game.mode || 'free'));
 intelBtn.addEventListener('click', openDossier);
+document.getElementById('daily-btn').addEventListener('click', openDailyBriefing);
+document.getElementById('daily-close').addEventListener('click', closeDailyBriefing);
+document.getElementById('daily-play-btn').addEventListener('click', () => { closeDailyBriefing(); startGame('daily'); });
+document.getElementById('daily-modal').addEventListener('click', (e) => { if (e.target.id === 'daily-modal') closeDailyBriefing(); });
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.getElementById('daily-modal').classList.contains('hidden')) closeDailyBriefing(); });
 document.getElementById('dossier-close').addEventListener('click', closeDossier);
 dossierModal.addEventListener('click', onDossierBackdrop);
 window.addEventListener('keydown', onDossierEsc);
@@ -1424,7 +1497,7 @@ window.addEventListener('keydown', (e) => {
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ') { e.preventDefault(); requestFire(); }
   if (e.key.toLowerCase() === 'p') togglePause();
-  if (e.key === 'Enter' && (game.state === STATE.TITLE || game.state === STATE.GAMEOVER)) startGame();
+  if (e.key === 'Enter' && (game.state === STATE.TITLE || game.state === STATE.GAMEOVER)) startGame(game.mode || 'free');
 });
 window.addEventListener('keyup', (e) => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
@@ -1572,7 +1645,24 @@ function getPlayerToken() {
 }
 
 async function fetchTopScores() {
-  const rows = await sbGet('scores?select=player_id,name,score,wave,players(streak_days,total_plays)&order=score.desc&limit=' + MAX_SCORES);
+  const rows = await sbGet('scores?select=player_id,name,score,wave,players(streak_days,total_plays)'
+    + '&game_mode=eq.free'
+    + '&order=score.desc&limit=' + MAX_SCORES);
+  return Array.isArray(rows) ? rows.map(r => ({
+    player_id: r.player_id,
+    name: r.name, score: r.score, wave: r.wave,
+    streak_days: r.players?.streak_days || 0,
+    total_plays: r.players?.total_plays || 0
+  })) : [];
+}
+
+async function fetchDailyTopScores(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return [];
+  const path = `daily_leaderboard?select=player_id,name,score,wave,players(streak_days,total_plays)`
+             + `&play_date=eq.${encodeURIComponent(dateStr)}`
+             + `&order=score.desc`
+             + `&limit=${MAX_SCORES}`;
+  const rows = await sbGet(path);
   return Array.isArray(rows) ? rows.map(r => ({
     player_id: r.player_id,
     name: r.name, score: r.score, wave: r.wave,
@@ -1618,7 +1708,7 @@ async function upsertPlayer(token, name, score) {
   }
 }
 
-async function insertScore(playerId, name, score, wave, stats) {
+async function insertScore(playerId, name, score, wave, stats, mode, playDate, seed) {
   await sbPost('scores', {
     player_id: playerId,
     name, score, wave,
@@ -1631,7 +1721,10 @@ async function insertScore(playerId, name, score, wave, stats) {
     threat_types_mask:   stats?.threatTypesMask    ?? 0,
     modifier_key:        stats?.modifierKey        ?? null,
     weekly_buff_key:     stats?.weeklyBuffKey      ?? null,
-    score_multiplier:    stats?.scoreMultiplier    ?? 1.0
+    score_multiplier:    stats?.scoreMultiplier    ?? 1.0,
+    game_mode:           mode || 'free',
+    play_date:           playDate || null,
+    daily_seed:          seed || null
   });
 }
 
@@ -1892,6 +1985,67 @@ function renderDossierEntries() {
 }
 function openDossier()  { renderDossierEntries(); dossierModal.classList.remove('hidden'); document.getElementById('dossier-close').focus(); }
 function closeDossier() { dossierModal.classList.add('hidden'); intelBtn.focus(); }
+
+let dailyResetTimer = null;
+
+function dailyModifierFor(seed, weekly) {
+  const r = mulberry32(seed);
+  let m = MODIFIERS[Math.floor(r() * MODIFIERS.length)];
+  if (m.effects.onlySpawn && weekly && weekly.enemyType !== '*' && !m.effects.onlySpawn.includes(weekly.enemyType)) {
+    m = MODIFIERS[Math.floor(r() * MODIFIERS.length)];
+  }
+  return m;
+}
+
+function tickDailyReset() {
+  const el = document.getElementById('daily-reset');
+  if (!el) return;
+  el.textContent = 'NEW BRIEFING IN ' + fmtHMS(msUntilEndOfUTCDay());
+}
+
+function renderDailyLeaderboard(rows) {
+  const el = document.getElementById('daily-lb-rows');
+  if (!el) return;
+  if (!rows.length) {
+    el.innerHTML = '<div class="daily-empty">Be the first to defend today. No scores yet.</div>';
+    return;
+  }
+  el.innerHTML = rows.slice(0, 10).map((s, i) => `
+    <div class="daily-lb-row">
+      <span class="lb-rank">${i + 1}.</span>
+      <span class="lb-name">${escapeHtml(s.name).slice(0, 12)}</span>
+      <span class="lb-score">${(s.score || 0).toLocaleString()}</span>
+      <span class="lb-wave">Q${parseInt(s.wave, 10) || 0}</span>
+    </div>
+  `).join('');
+}
+
+async function openDailyBriefing() {
+  const dateStr = utcDateStringNow();
+  const seed    = seedFromDate(dateStr);
+  const weekly  = computeWeeklyBuff();
+  const modifier = dailyModifierFor(seed, weekly);
+  document.getElementById('daily-date').textContent = dateStr;
+  document.getElementById('daily-seed').textContent = 'SEED · #' + seed.toString(16).slice(0, 8).toUpperCase();
+  document.getElementById('daily-modifier').textContent = 'MODIFIER · ' + modifier.label;
+  document.getElementById('daily-weekly').textContent   = 'THIS WEEK · ' + weekly.label;
+  renderDailyLeaderboard([]);
+  document.getElementById('daily-modal').classList.remove('hidden');
+  document.getElementById('daily-close').focus();
+  tickDailyReset();
+  if (dailyResetTimer) clearInterval(dailyResetTimer);
+  dailyResetTimer = setInterval(tickDailyReset, 1000);
+  try {
+    const rows = await fetchDailyTopScores(dateStr);
+    renderDailyLeaderboard(rows);
+  } catch (e) { /* silent */ }
+}
+
+function closeDailyBriefing() {
+  document.getElementById('daily-modal').classList.add('hidden');
+  if (dailyResetTimer) { clearInterval(dailyResetTimer); dailyResetTimer = null; }
+  document.getElementById('daily-btn').focus();
+}
 function onDossierBackdrop(e) { if (e.target === dossierModal) closeDossier(); }
 function onDossierEsc(e) { if (e.key === 'Escape' && !dossierModal.classList.contains('hidden')) closeDossier(); }
 function buildShareText() {
@@ -2176,9 +2330,11 @@ async function submitName() {
   document.getElementById('name-entry').classList.add('hidden');
   const token  = getPlayerToken();
   cachedPlayer = await upsertPlayer(token, name, game.score);
-  await insertScore(cachedPlayer.id, name, game.score, game.wave, game.stats);
+  await insertScore(cachedPlayer.id, name, game.score, game.wave, game.stats, game.mode, game.dailyDateStr, game.dailySeed);
   if (email) await insertLead(cachedPlayer.id, email);
-  cachedScores = await fetchTopScores();
+  cachedScores = game.mode === 'daily'
+    ? await fetchDailyTopScores(game.dailyDateStr)
+    : await fetchTopScores();
   const globalRank = (cachedPlayer?.id
     ? cachedScores.findIndex(s => s.player_id === cachedPlayer.id)
     : cachedScores.findIndex(s => s.name === name && s.score === game.score)) + 1 || 99;
@@ -2192,8 +2348,34 @@ async function submitName() {
 // ===========================================================================
 // HELPERS
 // ===========================================================================
-function rand(a, b) { return a + Math.random() * (b - a); }
-function chance(p) { return Math.random() < p; }
+function mulberry32(seed) {
+  let s = seed >>> 0;
+  return function() {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seedFromDate(dateStr) {
+  const s = 'IDD-v1::' + dateStr;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+function utcDateStringNow() {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+}
+
+function rand(a, b) { return a + game.rngFn() * (b - a); }
+function chance(p) { return game.rngFn() < p; }
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function dist2(ax, ay, bx, by) { const dx=ax-bx, dy=ay-by; return dx*dx + dy*dy; }
 function showAlert(text, ms=1800) {
@@ -2465,7 +2647,7 @@ function tryTriggerDive() {
   const idle = game.enemies.filter(e => e.state === 'FORMATION');
   if (idle.length === 0) return;
   // Prefer agents (flagships) to dive with escorts
-  const flagship = idle.find(e => e.type === 'AGENT' && Math.random() < 0.4);
+  const flagship = idle.find(e => e.type === 'AGENT' && game.rngFn() < 0.4);
   if (flagship && flagship.escortIds.length > 0) {
     // Flagship dives WITH escorts (the iconic combo)
     launchDive(flagship);
@@ -2479,7 +2661,7 @@ function tryTriggerDive() {
     });
     game.flagshipComboCounter = { escortsKilled: 0, parentId: flagship.id };
   } else {
-    const e = idle[Math.floor(Math.random() * idle.length)];
+    const e = idle[Math.floor(game.rngFn() * idle.length)];
     launchDive(e);
   }
 }
@@ -2631,13 +2813,16 @@ function dropPowerup(x, y, forceKey = null) {
   if (allKeys.length === 0) return;
   let key = forceKey;
   if (!key) {
-    const preferred = new Set((cachedPlayer?.preferred_powerups || []).filter(k => allKeys.includes(k)));
+    const useLoadout = (game.mode !== 'daily');
+    const preferred = useLoadout
+      ? new Set((cachedPlayer?.preferred_powerups || []).filter(k => allKeys.includes(k)))
+      : new Set();
     const weighted = [];
     for (const k of allKeys) {
       weighted.push(k);
       if (preferred.has(k)) weighted.push(k);
     }
-    key = weighted[Math.floor(Math.random() * weighted.length)];
+    key = weighted[Math.floor(game.rngFn() * weighted.length)];
   } else if (blocked.has(key)) {
     return;
   }
@@ -2909,15 +3094,15 @@ function playerHit() {
 function spawnParticles(x, y, count, color) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = rand(1, 4);
+    const speed = 1 + Math.random() * 3;
     game.particles.push({
       x, y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      life: rand(20, 40),
+      life: 20 + Math.random() * 20,
       maxLife: 40,
       color,
-      size: rand(1.5, 3)
+      size: 1.5 + Math.random() * 1.5
     });
   }
 }
@@ -3105,8 +3290,8 @@ function drawBackground() {
       game.bgNodes.push({
         x: Math.random()*CANVAS_W,
         y: Math.random()*CANVAS_H,
-        speed: rand(0.2, 0.7),
-        size: rand(1, 2.5),
+        speed: 0.2 + Math.random() * 0.5,
+        size: 1 + Math.random() * 1.5,
         hue: ['#4FC3F7','#BA68C8','#FFD54F','#FF6B4A'][Math.floor(Math.random()*4)]
       });
     }
@@ -3561,7 +3746,7 @@ function loop() {
 // ===========================================================================
 // STATE TRANSITIONS
 // ===========================================================================
-function startGame() {
+function startGame(mode = 'free') {
   ensureAudio();
   game.score = 0;
   game.lives = 3;
@@ -3587,6 +3772,18 @@ function startGame() {
     threatTypesMask:   0,
     killsByType:       {}
   };
+  game.mode = mode;
+  if (mode === 'daily') {
+    game.dailyDateStr = utcDateStringNow();
+    game.dailySeed    = seedFromDate(game.dailyDateStr);
+    game.rngFn        = mulberry32(game.dailySeed);
+    game.dailyInsiderWaves = dailyInsiderWaves(game.dailySeed);
+  } else {
+    game.dailyDateStr = null;
+    game.dailySeed    = null;
+    game.rngFn        = Math.random;
+    game.dailyInsiderWaves = null;
+  }
   game.weekly   = computeWeeklyBuff();
   game.modifier = rollModifierAvoidingWeeklyConflict(game.weekly);
   game.insiderEvent = { active: false, deadline: 0, insiderId: null, armed: false };
@@ -3601,6 +3798,15 @@ function startGame() {
   }
   buildWarmup();
   titleScreen.classList.add('hidden');
+  const modeBadge = document.getElementById('hud-mode-badge');
+  if (modeBadge) {
+    if (game.mode === 'daily') {
+      modeBadge.textContent = 'DAILY · #' + game.dailySeed.toString(16).slice(0, 6).toUpperCase();
+      modeBadge.classList.remove('hidden');
+    } else {
+      modeBadge.classList.add('hidden');
+    }
+  }
   stopTitleCountdown();
   stopLiveTicker();
   gameoverScreen.classList.add('hidden');
@@ -3623,6 +3829,8 @@ function togglePause() {
 
 async function gameOver() {
   game.state = STATE.GAMEOVER;
+  const _modeBadge = document.getElementById('hud-mode-badge');
+  if (_modeBadge) _modeBadge.classList.add('hidden');
   updateMobileUI(STATE.GAMEOVER);
   const mult = game.modifier?.mult ?? 1.0;
   const rawScore = game.score;
@@ -3644,7 +3852,9 @@ async function gameOver() {
   gameoverScreen.classList.remove('hidden');
   document.getElementById('download-card-btn').style.display = game.score > 0 ? '' : 'none';
 
-  cachedScores = await fetchTopScores();
+  cachedScores = game.mode === 'daily'
+    ? await fetchDailyTopScores(game.dailyDateStr)
+    : await fetchTopScores();
 
   // Show returning player's existing badges immediately
   const token = getPlayerToken();
