@@ -805,6 +805,77 @@
   .dossier-kills { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; color: var(--accent-1); margin-top: 4px; }
   .intel-btn { margin-top: 10px; background: linear-gradient(135deg, #0d1230, #1a2253); color: var(--accent-1); border: 1px solid var(--accent-1); box-shadow: 0 0 10px rgba(255,200,87,0.2); animation: none; }
   .intel-btn:hover { background: rgba(255,200,87,0.1); }
+  .title-weekly { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; color: var(--accent-2); margin-bottom: 8px; letter-spacing: 1px; }
+  .title-weekly.hidden { display: none; }
+  .modifier-card {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 9px;
+    padding: 10px 14px;
+    margin: 0 0 14px;
+    background: linear-gradient(135deg, rgba(255,107,74,0.15), rgba(186,104,200,0.10));
+    border: 1px solid var(--accent-3);
+    border-radius: 6px;
+    color: var(--text);
+    letter-spacing: 1.2px;
+    box-shadow: 0 0 16px rgba(255,107,74,0.25);
+    text-align: center;
+    line-height: 1.5;
+  }
+  .modifier-card .mod-mult { color: var(--accent-1); font-weight: bold; margin-left: 6px; }
+  .modifier-card.hidden { display: none; }
+  .rank-line {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 9px;
+    color: var(--accent-1);
+    margin-bottom: 6px;
+    letter-spacing: 1.5px;
+    text-shadow: 0 0 8px rgba(255,200,87,0.4);
+  }
+  .rank-line.hidden { display: none; }
+  .live-ticker {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 200px;
+    font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    z-index: 6;
+    pointer-events: none;
+  }
+  body.touch-device .live-ticker { display: none !important; }
+  .live-ticker.hidden { display: none; }
+  .ticker-row {
+    background: rgba(7,9,26,0.7);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 3px;
+    padding: 4px 7px;
+    margin-bottom: 3px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+    align-items: center;
+  }
+  .ticker-row .t-name { color: var(--text); font-weight: bold; overflow: hidden; text-overflow: ellipsis; }
+  .ticker-row .t-wave { color: var(--accent-1); }
+  .ticker-row .t-acc { color: var(--accent-2); font-size: 8px; }
+  .ticker-row .t-ago { color: var(--dim); font-size: 8px; }
+  .loadout-hint { font-size: 10px; color: var(--dim); margin-bottom: 10px; }
+  .loadout-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .loadout-row {
+    display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center;
+    padding: 8px; background: rgba(255,255,255,0.03); border-radius: 4px; cursor: pointer;
+  }
+  .loadout-row.selected { background: rgba(255,200,87,0.10); border: 1px solid rgba(255,200,87,0.35); }
+  .loadout-row.disabled { opacity: 0.4; cursor: not-allowed; }
+  .loadout-name { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 9px; color: var(--text); }
+  .loadout-desc { font-size: 10px; color: var(--dim); }
+  .loadout-check { width: 18px; height: 18px; }
+  .loadout-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .loadout-counter { font-size: 9px; color: var(--dim); }
+  .loadout-row.blocked-by-mod { opacity: 0.45; }
+  .loadout-row.blocked-by-mod::after { content: 'blocked by run modifier'; font-size: 8px; color: var(--accent-3); margin-left: 10px; }
+  .badge-rank-current { background: rgba(255,200,87,0.12); border: 1px solid rgba(255,200,87,0.5); color: var(--accent-1); }
 </style>
 </head>
 <body>
@@ -838,7 +909,10 @@
       <div class="title-main">IDENTITY<br>DEFENDER</div>
       <div class="tagline">HACKERS DON'T HACK IN <span>·</span> THEY LOG IN</div>
       <div class="title-best hidden" id="title-best">PERSONAL BEST · <span id="title-best-score">0</span></div>
+      <div class="rank-line hidden" id="title-rank"></div>
       <div class="streak-line hidden" id="title-streak"></div>
+      <div class="title-weekly hidden" id="title-weekly"></div>
+      <div class="modifier-card hidden" id="title-modifier"></div>
       <div class="briefing">
         <h3>BRIEFING</h3>
         <div style="margin-bottom: 12px; color: var(--text);">
@@ -853,6 +927,7 @@
       </div>
       <button class="start-btn" id="start-btn">INITIATE DEFENSE</button>
       <button class="start-btn intel-btn" id="intel-btn">📋 THREAT INTEL</button>
+      <button class="start-btn intel-btn" id="loadout-btn">🎯 LOADOUT</button>
     </div>
 
     <div class="dossier-modal hidden" id="dossier-modal" role="dialog" aria-modal="true" aria-labelledby="dossier-title">
@@ -862,6 +937,21 @@
         <div class="dossier-list" id="dossier-list"></div>
       </div>
     </div>
+
+    <div class="dossier-modal hidden" id="loadout-modal" role="dialog" aria-modal="true" aria-labelledby="loadout-title">
+      <div class="dossier-card" role="document">
+        <button class="dossier-close" id="loadout-close" aria-label="Close">✕</button>
+        <h2 id="loadout-title">LOADOUT · PICK 2 PRIMARY</h2>
+        <div class="loadout-hint">Primary power-ups drop at 2x rate.</div>
+        <div class="loadout-list" id="loadout-list"></div>
+        <div class="loadout-actions">
+          <span class="loadout-counter" id="loadout-counter">0 / 2 selected</span>
+          <button class="start-btn" id="loadout-save" disabled>SAVE LOADOUT</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="live-ticker hidden" id="live-ticker"></div>
 
     <!-- Game over screen -->
     <div class="overlay hidden" id="gameover-screen">
@@ -1108,6 +1198,130 @@ const ENEMY = {
   SANCTIONED: { name:'Sanctioned User',     color:'#81C784', glow:'#C8E6C9', formationPts:-100, divePts:-100 },
   SCATTERED:  { name:'Scattered Spider',    color:'#E94A88', glow:'#F48FB1', formationPts:0,   divePts:250 }
 };
+
+const MODIFIERS = [
+  { key: 'BREACH_AGENTS',   label: 'BREACH SCENARIO · AI AGENTS +25% FASTER',
+    mult: 1.5, effects: { enemySpeedByType: { AGENT: 1.25 } } },
+  { key: 'INTEL_NHI',       label: 'INTEL · NHIs SPAWN 50% MORE OFTEN',
+    mult: 1.3, effects: { extraNhiInBuildWave: true } },
+  { key: 'INCIDENT_NO_SHIELD', label: 'INCIDENT · NO MFA SHIELD THIS RUN',
+    mult: 2.0, effects: { blockPowerups: ['SHIELD'] } },
+  { key: 'DEFCON_2',        label: 'DEFCON 2 · ALL ENEMIES +10% SPEED',
+    mult: 1.4, effects: { enemySpeedAll: 1.10 } },
+  { key: 'ZERO_TRUST',      label: 'ZERO TRUST · SANCTIONED PENALTY DOUBLED',
+    mult: 1.6, effects: { sanctionedPenalty: 400 } },
+  { key: 'OBSERVED',        label: 'OBSERVED · OBSERV PRE-LOADED (3X DURATION)',
+    mult: 0.8, effects: { preloadObserv: 3 } },
+  { key: 'REGULATORY',      label: 'REGULATORY · ONLY AGENTS & CREDS SPAWN',
+    mult: 1.7, effects: { onlySpawn: ['AGENT', 'CRED'] } },
+  { key: 'STEALTH',         label: 'STEALTH · LOTL FLICKER TELL DISABLED',
+    mult: 1.8, effects: { disableLotlFlicker: true } }
+];
+
+const WEEKLY_BUFFS = [
+  { key: 'W_DRONE',     enemyType: 'DRONE',     label: 'Shadow IT raids · +30% speed, +20% points',
+    effects: { speed: 1.30, points: 1.20 } },
+  { key: 'W_CRED',      enemyType: 'CRED',      label: 'Compromised Creds · +50% spawn, +30% points',
+    effects: { points: 1.30, credSpawnBoost: 1.5 } },
+  { key: 'W_NHI',       enemyType: 'NHI',       label: 'Rogue NHIs · +25% speed, +20% points',
+    effects: { speed: 1.25, points: 1.20 } },
+  { key: 'W_AGENT',     enemyType: 'AGENT',     label: 'Rogue AI Agents · +25% speed, +40% points',
+    effects: { speed: 1.25, points: 1.40 } },
+  { key: 'W_LOTL',      enemyType: 'LOTL',      label: 'LOTL Impostors · +30% speed, shorter flicker tell',
+    effects: { speed: 1.30, lotlFlickerWindowPx: 12 } },
+  { key: 'W_SCATTERED', enemyType: 'SCATTERED', label: 'Scattered Spider raids · +20% speed, +50% points',
+    effects: { speed: 1.20, points: 1.50 } },
+  { key: 'W_WILDCARD',  enemyType: '*',         label: 'WILDCARD · All enemies +15% points',
+    effects: { points: 1.15 } }
+];
+
+const DEFENDER_RANKS = [
+  { key: 'PRINCIPAL', label: 'PRINCIPAL SOC ARCHITECT',
+    min: { plays: 200, best: 50000, streak: 14, threatCoverage: true } },
+  { key: 'COMMANDER', label: 'INCIDENT COMMANDER',
+    min: { plays: 100, best: 30000, streak: 7 } },
+  { key: 'LEAD',      label: 'SOC LEAD',
+    min: { plays: 50,  best: 15000, streak: 3 } },
+  { key: 'SENIOR',    label: 'SENIOR ANALYST',
+    min: { plays: 20,  best: 5000 } },
+  { key: 'JUNIOR',    label: 'JUNIOR ANALYST',
+    min: { plays: 5 } },
+  { key: 'RECRUIT',   label: 'RECRUIT',
+    min: {} }
+];
+
+function computeDefenderRank(player) {
+  if (!player) return DEFENDER_RANKS[DEFENDER_RANKS.length - 1];
+  const plays  = player.total_plays || 0;
+  const best   = player.best_score  || 0;
+  const streak = player.streak_days || 0;
+  const hasThreatCoverage = !!player.threat_coverage_ever;
+  for (const tier of DEFENDER_RANKS) {
+    const m = tier.min;
+    if ((m.plays  || 0) > plays)  continue;
+    if ((m.best   || 0) > best)   continue;
+    if ((m.streak || 0) > streak) continue;
+    if (m.threatCoverage && !hasThreatCoverage) continue;
+    return tier;
+  }
+  return DEFENDER_RANKS[DEFENDER_RANKS.length - 1];
+}
+
+function rollModifier() {
+  return MODIFIERS[Math.floor(Math.random() * MODIFIERS.length)];
+}
+
+function isoWeekNumber(d = new Date()) {
+  const target = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = target.getUTCDay() || 7;
+  target.setUTCDate(target.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+  return Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
+}
+function computeWeeklyBuff() {
+  return WEEKLY_BUFFS[isoWeekNumber() % 7];
+}
+
+function weeklyPointsMult(enemyType) {
+  const w = game.weekly;
+  if (!w) return 1;
+  if (w.enemyType === '*') return w.effects.points || 1;
+  return (w.enemyType === enemyType) ? (w.effects.points || 1) : 1;
+}
+function weeklyTypeSpeedMult(enemyType) {
+  const w = game.weekly;
+  if (!w) return 1;
+  return (w.enemyType === enemyType) ? (w.effects.speed || 1) : 1;
+}
+
+function rollModifierAvoidingWeeklyConflict(weekly) {
+  let m = rollModifier();
+  if (m.effects.onlySpawn && weekly && weekly.enemyType !== '*' && !m.effects.onlySpawn.includes(weekly.enemyType)) {
+    m = rollModifier();
+  }
+  return m;
+}
+
+function maybeArmInsiderEvent() {
+  if (!game.insiderEvent) return;
+  if (game.wave < 3) return;
+  if (game.insiderEvent.active) return;
+  if (!chance(0.05)) return;
+  game.insiderEvent.active = true;
+  game.insiderEvent.deadline = performance.now() + 60_000;
+  game.insiderEvent.armed = true;
+  game.insiderEvent.insiderId = null;
+  showAlert('⚠ INSIDER THREAT DETECTED — ONE SANCTIONED USER IS COMPROMISED', 4000);
+  if (typeof sfxAlert === 'function') sfxAlert();
+}
+
+function endInsiderEvent() {
+  if (!game.insiderEvent) return;
+  game.insiderEvent.active = false;
+  game.insiderEvent.deadline = 0;
+  game.insiderEvent.insiderId = null;
+  game.insiderEvent.armed = false;
+}
 
 const POWERUP = {
   SHIELD: { key:'SHIELD', label:'MFA SHIELD',  color:'#4FC3F7', duration:0, kind:'oneshot' },
@@ -1385,12 +1599,16 @@ async function upsertPlayer(token, name, score) {
   const runKills  = (game.stats && game.stats.killsByType) || {};
   const mergedKills = { ...prevKills };
   for (const k of Object.keys(runKills)) mergedKills[k] = (mergedKills[k] || 0) + runKills[k];
+  const ranEver = (existing?.threat_coverage_ever) || (((game.stats?.threatTypesMask || 0) & 63) === 63);
   const payload = {
     name, streak_days: streak, last_played_date: today,
     best_score: existing ? Math.max(existing.best_score || 0, score) : score,
     total_plays: (existing?.total_plays || 0) + 1,
-    kills_by_type: mergedKills
+    kills_by_type: mergedKills,
+    threat_coverage_ever: ranEver
   };
+  const projected = { ...(existing || {}), ...payload };
+  payload.current_rank = computeDefenderRank(projected).key;
   if (existing) {
     const rows = await sbPatch(`players?token=eq.${encodeURIComponent(token)}`, payload);
     return Array.isArray(rows) && rows.length ? rows[0] : { ...existing, ...payload };
@@ -1410,7 +1628,10 @@ async function insertScore(playerId, name, score, wave, stats) {
     max_hit_streak:      stats?.maxHitStreak       ?? 0,
     fastest_quarter_sec: stats?.fastestQuarterSec  ?? null,
     ai_combos:           stats?.aiCombos           ?? 0,
-    threat_types_mask:   stats?.threatTypesMask    ?? 0
+    threat_types_mask:   stats?.threatTypesMask    ?? 0,
+    modifier_key:        stats?.modifierKey        ?? null,
+    weekly_buff_key:     stats?.weeklyBuffKey      ?? null,
+    score_multiplier:    stats?.scoreMultiplier    ?? 1.0
   });
 }
 
@@ -1454,8 +1675,12 @@ function computeBadges(player, globalRank, runStats) {
 
 function renderBadgeRow(badges) {
   const row = document.getElementById('badge-row');
-  if (!badges.length) { row.classList.add('hidden'); return; }
-  row.innerHTML = badges.map(b => `<span class="badge ${b.cls}">${b.label}</span>`).join('');
+  const rankBadge = computeDefenderRank(cachedPlayer);
+  const all = [
+    { cls: 'badge-rank-current', label: `★ ${rankBadge.label}` },
+    ...badges
+  ];
+  row.innerHTML = all.map(b => `<span class="badge ${b.cls}">${b.label}</span>`).join('');
   row.classList.remove('hidden');
 }
 
@@ -1555,6 +1780,69 @@ function startTitleCountdown() {
 }
 function stopTitleCountdown() {
   if (titleCountdownTimer) { clearInterval(titleCountdownTimer); titleCountdownTimer = null; }
+}
+function updateTitleModifier() {
+  const el = document.getElementById('title-modifier');
+  if (!el) return;
+  el.classList.add('hidden');
+}
+function updateTitleWeekly() {
+  const el = document.getElementById('title-weekly');
+  if (!el) return;
+  const w = computeWeeklyBuff();
+  el.textContent = `THIS WEEK · ${w.label}`;
+  el.classList.remove('hidden');
+}
+function updateTitleRank() {
+  const el = document.getElementById('title-rank');
+  if (!el) return;
+  if (!cachedPlayer) { el.classList.add('hidden'); return; }
+  const r = computeDefenderRank(cachedPlayer);
+  el.textContent = `RANK · ${r.label}`;
+  el.classList.remove('hidden');
+}
+let tickerTimer = null;
+let cachedTicker = [];
+async function fetchTicker() {
+  const rows = await sbGet('scores?select=name,wave,shots_fired,shots_hit,created_at&order=created_at.desc&limit=5');
+  return rows || [];
+}
+function fmtAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'NOW';
+  if (m < 60) return `${m} MIN AGO`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}H AGO`;
+  return `${Math.floor(h / 24)}D AGO`;
+}
+async function tickLiveTicker() {
+  const el = document.getElementById('live-ticker');
+  if (!el) return;
+  try {
+    const rows = await fetchTicker();
+    cachedTicker = rows;
+    el.innerHTML = rows.map(r => {
+      const acc = r.shots_fired > 0 ? Math.round((r.shots_hit / r.shots_fired) * 100) : 0;
+      return `<div class="ticker-row">
+        <span class="t-name">${escapeHtml(r.name).slice(0,12)}</span>
+        <span class="t-wave">Q${parseInt(r.wave, 10) || 0}</span>
+        <span class="t-acc">${acc}% ACC</span>
+        <span class="t-ago">${fmtAgo(r.created_at)}</span>
+      </div>`;
+    }).join('');
+    el.classList.remove('hidden');
+  } catch (e) { }
+}
+function startLiveTicker() {
+  stopLiveTicker();
+  tickLiveTicker();
+  tickerTimer = setInterval(tickLiveTicker, 30_000);
+}
+function stopLiveTicker() {
+  if (tickerTimer) { clearInterval(tickerTimer); tickerTimer = null; }
+  const el = document.getElementById('live-ticker');
+  if (el) el.classList.add('hidden');
 }
 const DOSSIER = [
   { type:'DRONE', color:'#4FC3F7', glow:'#81D4FA', name:'Shadow IT', klass:'Unmanaged endpoint',
@@ -1761,6 +2049,23 @@ async function generateShareCard() {
       cx.fillText(badgeText, bx + bw / 2, by + 19);
       cx.shadowBlur = 0;
     }
+    const dr = computeDefenderRank(cachedPlayer);
+    cx.font = "bold 14px 'Press Start 2P', 'Courier New', monospace";
+    const drText = `★ ${dr.label}`;
+    const drw = cx.measureText(drText).width + 28;
+    const drx = 28, dry = H - 44;
+    cx.fillStyle = 'rgba(10,15,36,0.75)';
+    cx.beginPath();
+    cx.roundRect(drx, dry, drw, 28, 14);
+    cx.fill();
+    cx.strokeStyle = 'rgba(255,200,87,0.5)';
+    cx.lineWidth = 1;
+    cx.stroke();
+    cx.fillStyle = '#FFC857';
+    cx.shadowColor = '#FFC857';
+    cx.shadowBlur = 8;
+    cx.fillText(drText, drx + drw / 2, dry + 19);
+    cx.shadowBlur = 0;
   }
 
   // Corner sprites
@@ -1941,32 +2246,35 @@ let nextEnemyId = 1;
 
 function buildWave(waveNum) {
   game.enemies = [];
-  // Difficulty scales: more dives, faster enemy shots, more LOTL
   const cols = 10;
   const colSpacing = 50;
   const rowSpacing = 38;
   const startX = (CANVAS_W - (cols - 1) * colSpacing) / 2;
   const startY = 90;
 
-  // Row 0: 4 Agents (flagships) at columns 3..6
-  for (let c = 3; c <= 6; c++) {
-    addFormationEnemy('AGENT', c, 0, startX, startY, colSpacing, rowSpacing);
+  const onlySpawn = game.modifier?.effects?.onlySpawn;
+  const allow = (type) => !onlySpawn || onlySpawn.includes(type);
+  const extraNhi = !!game.modifier?.effects?.extraNhiInBuildWave;
+  const credBoost = (game.weekly?.effects?.credSpawnBoost) || 1;
+
+  if (allow('AGENT')) {
+    for (let c = 3; c <= 6; c++) addFormationEnemy('AGENT', c, 0, startX, startY, colSpacing, rowSpacing);
   }
-  // Row 1: 6 NHIs (escorts) at columns 2..7
-  for (let c = 2; c <= 7; c++) {
-    addFormationEnemy('NHI', c, 1, startX, startY, colSpacing, rowSpacing);
+  if (allow('NHI')) {
+    const nhiCols = extraNhi ? [1,2,3,4,5,6,7,8] : [2,3,4,5,6,7];
+    for (const c of nhiCols) addFormationEnemy('NHI', c, 1, startX, startY, colSpacing, rowSpacing);
   }
-  // Row 2-3: Purples (8 wide)
-  for (let r = 2; r <= 3; r++) {
-    for (let c = 1; c <= 8; c++) {
-      addFormationEnemy('CRED', c, r, startX, startY, colSpacing, rowSpacing);
+  if (allow('CRED')) {
+    const credRows = credBoost > 1 ? 3 : 2;
+    for (let r = 2; r < 2 + credRows; r++) {
+      for (let c = 1; c <= 8; c++) addFormationEnemy('CRED', c, r, startX, startY, colSpacing, rowSpacing);
     }
   }
-  // Row 4-5: Blues (full 10 wide) — fewer in higher waves to keep pace tight
-  const blueRows = Math.max(1, 2 - Math.floor((waveNum-1)/3));
-  for (let r = 4; r < 4 + blueRows; r++) {
-    for (let c = 0; c < cols; c++) {
-      addFormationEnemy('DRONE', c, r, startX, startY, colSpacing, rowSpacing);
+  if (allow('DRONE')) {
+    const blueRows = Math.max(1, 2 - Math.floor((waveNum-1)/3));
+    const droneStartRow = (credBoost > 1) ? 5 : 4;
+    for (let r = droneStartRow; r < droneStartRow + blueRows; r++) {
+      for (let c = 0; c < cols; c++) addFormationEnemy('DRONE', c, r, startX, startY, colSpacing, rowSpacing);
     }
   }
 
@@ -2039,8 +2347,15 @@ function updateDivingEnemy(e) {
   e.diveTime++;
   // Yellow Agents and Red NHIs dive slower so you have time to read the combo
   // and pick off escorts before the flagship; small fry (drone/cred) stay snappy.
-  const divisor = (e.type === 'AGENT' || e.type === 'NHI') ? 180 : 110;
-  const accel   = (e.type === 'AGENT' || e.type === 'NHI') ? 28  : 60;
+  const isFast = (e.type === 'AGENT' || e.type === 'NHI');
+  let divisor = isFast ? 180 : 110;
+  let accel   = isFast ? 28  : 60;
+  const modAll  = game.modifier?.effects?.enemySpeedAll || 1;
+  const modType = game.modifier?.effects?.enemySpeedByType?.[e.type] || 1;
+  const weekly  = weeklyTypeSpeedMult(e.type);
+  const speedMult = modAll * modType * weekly;
+  divisor /= speedMult;
+  accel   *= speedMult;
   const t = e.diveTime / divisor;
   const startX = e.diveStart.x;
   const startY = e.diveStart.y;
@@ -2072,15 +2387,21 @@ function updateDivingEnemy(e) {
 
 function updateLOTL(e) {
   // Slow drift downward
-  e.y += 0.7;
+  const lotlSpeedMult = (e.isInsider ? 1.4 : 1) * weeklyTypeSpeedMult('LOTL') * (game.modifier?.effects?.enemySpeedAll || 1);
+  e.y += 0.7 * lotlSpeedMult;
   e.x += Math.sin(performance.now()/800 + e.id) * 0.5;
   // Sanctioned users never reveal — they just drift off the bottom harmlessly
   if (e.isSanctioned) {
-    if (e.y > CANVAS_H + 30) e.markedForRemoval = true;
+    if (e.y > CANVAS_H + 30) {
+      if (e.isInsider) endInsiderEvent();
+      e.markedForRemoval = true;
+    }
     return;
   }
   const trigger = isPUActive('GRAPH') ? 120 : TRUST_BOUNDARY_Y;
-  e.aboutToReveal = (e.y > trigger - 21) && (e.y <= trigger);
+  const flickerWindowPx = game.weekly?.effects?.lotlFlickerWindowPx || 21;
+  const disableFlicker  = game.modifier?.effects?.disableLotlFlicker;
+  e.aboutToReveal = !disableFlicker && (e.y > trigger - flickerWindowPx) && (e.y <= trigger);
   if (isPUActive('GRAPH')) {
     // Identity Graph: force reveal early
     if (e.y > 120) revealLOTL(e);
@@ -2218,8 +2539,12 @@ function spawnSanctioned() {
     fireCooldown: 9999,
     isSanctioned: true
   });
-  // Override updateLOTL behavior: just drift down and exit
-  // We'll handle in update loop based on isSanctioned flag
+  if (game.insiderEvent && game.insiderEvent.active && game.insiderEvent.armed && game.insiderEvent.insiderId == null) {
+    const just = game.enemies[game.enemies.length - 1];
+    just.isInsider = true;
+    game.insiderEvent.insiderId = just.id;
+    game.insiderEvent.armed = false;
+  }
 }
 
 // ===========================================================================
@@ -2300,9 +2625,22 @@ function updateSpiderRaid() {
 // ===========================================================================
 // POWERUPS
 // ===========================================================================
-function dropPowerup(x, y, forceKey=null) {
-  const keys = ['SHIELD','GRAPH','PAM','OBSERV','SWEEP','SECRET'];
-  const key = forceKey || keys[Math.floor(Math.random() * keys.length)];
+function dropPowerup(x, y, forceKey = null) {
+  const blocked = new Set(game.modifier?.effects?.blockPowerups || []);
+  const allKeys = ['SHIELD','GRAPH','PAM','OBSERV','SWEEP','SECRET'].filter(k => !blocked.has(k));
+  if (allKeys.length === 0) return;
+  let key = forceKey;
+  if (!key) {
+    const preferred = new Set((cachedPlayer?.preferred_powerups || []).filter(k => allKeys.includes(k)));
+    const weighted = [];
+    for (const k of allKeys) {
+      weighted.push(k);
+      if (preferred.has(k)) weighted.push(k);
+    }
+    key = weighted[Math.floor(Math.random() * weighted.length)];
+  } else if (blocked.has(key)) {
+    return;
+  }
   game.powerups.push({ x, y, vy: 1.4, key, w: 18, h: 18, age: 0 });
 }
 
@@ -2439,9 +2777,24 @@ function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
 
 function handleEnemyHit(e, b) {
   ensureAudio();
-  // Sanctioned user — penalty
+  // Sanctioned user — penalty (or insider kill)
   if (e.type === 'SANCTIONED') {
-    game.score = Math.max(0, game.score - 200);
+    if (e.isInsider) {
+      game.score += 1000;
+      game.stats.shotsHit++;
+      game.stats.hitStreak++;
+      if (game.stats.hitStreak > game.stats.maxHitStreak) game.stats.maxHitStreak = game.stats.hitStreak;
+      spawnParticles(e.x, e.y, 14, '#FFD54F');
+      showAlert('★ INSIDER NEUTRALIZED +1000', 2200);
+      if (typeof sfxFlagshipBig === 'function') sfxFlagshipBig();
+      endInsiderEvent();
+      e.markedForRemoval = true;
+      return;
+    }
+    const sanctionedPenalty =
+      (game.insiderEvent && game.insiderEvent.active) ? 500 :
+      (game.modifier?.effects?.sanctionedPenalty ?? 200);
+    game.score = Math.max(0, game.score - sanctionedPenalty);
     showAlert('✕ FALSE POSITIVE — SANCTIONED USER');
     spawnParticles(e.x, e.y, 8, '#A5D6A7');
     e.markedForRemoval = true;
@@ -2467,9 +2820,10 @@ function handleEnemyHit(e, b) {
   } else {
     pts = (e.state === 'FORMATION') ? def.formationPts : def.divePts;
   }
-  // LOTL early kill bonus
+  pts = Math.round(pts * weeklyPointsMult(e.type));
+  // LOTL early kill bonus (fixed 300 — overrides weekly-adjusted value)
   if (e.type === 'LOTL' && e.state === 'LOTL_DISGUISED') {
-    pts = 300; // pre-reveal observability bonus
+    pts = 300;
     showAlert('★ LOTL CAUGHT EARLY +300');
   }
   pts = Math.round(pts * comboMultiplier(game.stats.hitStreak));
@@ -2492,7 +2846,7 @@ function handleEnemyHit(e, b) {
 
   // Powerup drop chance
   if (e.type === 'AGENT' && pts >= 300) dropPowerup(e.x, e.y); // big flagship kill
-  else if (e.type === 'LOTL' && pts === 300) dropPowerup(e.x, e.y, chance(0.5) ? 'GRAPH' : null);
+  else if (e.type === 'LOTL' && e.state === 'LOTL_DISGUISED') dropPowerup(e.x, e.y, chance(0.5) ? 'GRAPH' : null);
   else if (chance(0.04)) dropPowerup(e.x, e.y);
 }
 
@@ -2605,6 +2959,7 @@ function updateWarmup() {
       if (game.state === STATE.WARMUP) {
         game.state = STATE.PLAYING;
         buildWave(1);
+        if (game.modifier) showAlert(game.modifier.label, 3500);
         game.quarterStartedAt = performance.now();
       }
     }, 1900);
@@ -2671,6 +3026,7 @@ function advanceWave() {
   setTimeout(() => {
     if (game.state === STATE.TRANSITION) {
       buildWave(game.wave);
+      maybeArmInsiderEvent();
       game.quarterStartedAt = performance.now();
       maybeTriggerSpiderRaid();
       game.state = STATE.PLAYING;
@@ -3179,6 +3535,10 @@ function loop() {
     tryTriggerDive();
     tryTriggerSpecial();
     updateSpiderRaid();
+    if (game.insiderEvent && game.insiderEvent.active && performance.now() > game.insiderEvent.deadline) {
+      endInsiderEvent();
+      showAlert('INSIDER EVACUATED — INTEL LOST', 2200);
+    }
     checkCollisions();
     checkWaveComplete();
     updateHUD();
@@ -3227,11 +3587,22 @@ function startGame() {
     threatTypesMask:   0,
     killsByType:       {}
   };
+  game.weekly   = computeWeeklyBuff();
+  game.modifier = rollModifierAvoidingWeeklyConflict(game.weekly);
+  game.insiderEvent = { active: false, deadline: 0, insiderId: null, armed: false };
+  game.stats.modifierKey   = game.modifier?.key || null;
+  game.stats.weeklyBuffKey = game.weekly?.key || null;
+  game.stats.scoreMultiplier = 1.0;
+  game.stats.rawScore = 0;
   game.quarterStartedAt = null;
   game.player = createPlayer();
+  if (game.modifier?.effects?.preloadObserv) {
+    game.activePU['OBSERV'] = { key: 'OBSERV', ttl: POWERUP.OBSERV.duration * 3 };
+  }
   buildWarmup();
   titleScreen.classList.add('hidden');
   stopTitleCountdown();
+  stopLiveTicker();
   gameoverScreen.classList.add('hidden');
   pauseScreen.classList.add('hidden');
   game.state = STATE.WARMUP;
@@ -3253,6 +3624,11 @@ function togglePause() {
 async function gameOver() {
   game.state = STATE.GAMEOVER;
   updateMobileUI(STATE.GAMEOVER);
+  const mult = game.modifier?.mult ?? 1.0;
+  const rawScore = game.score;
+  game.score = Math.round(rawScore * mult);
+  game.stats.scoreMultiplier = mult;
+  game.stats.rawScore = rawScore;
   finalScoreEl.textContent = game.score.toLocaleString();
   finalWaveEl.textContent = game.wave;
   const newRecordEl   = document.getElementById('new-record-badge');
@@ -3294,14 +3670,90 @@ async function gameOver() {
   }
 }
 
+let loadoutDraft = [];
+const POWERUP_KEYS = ['SHIELD','GRAPH','PAM','OBSERV','SWEEP','SECRET'];
+const POWERUP_LABELS = {
+  SHIELD:  { name: 'MFA SHIELD',     desc: 'Absorbs one hit' },
+  GRAPH:   { name: 'IDENTITY GRAPH', desc: 'Reveals LOTL instantly at y=120' },
+  PAM:     { name: 'PRIVILEGE MGMT', desc: 'Disables enemy fire for 6s' },
+  OBSERV:  { name: 'OBSERVABILITY',  desc: '2x score for 10s' },
+  SWEEP:   { name: 'THREAT SWEEP',   desc: 'Clears all formation enemies' },
+  SECRET:  { name: 'SECRETS VAULT',  desc: 'Awards +500 and 1 extra life' }
+};
+
+function openLoadout() {
+  loadoutDraft = (cachedPlayer?.preferred_powerups || []).slice();
+  renderLoadout();
+  document.getElementById('loadout-modal').classList.remove('hidden');
+  document.getElementById('loadout-close').focus();
+}
+function closeLoadout() {
+  document.getElementById('loadout-modal').classList.add('hidden');
+  document.getElementById('loadout-btn').focus();
+}
+function renderLoadout() {
+  const list = document.getElementById('loadout-list');
+  list.innerHTML = POWERUP_KEYS.map(k => {
+    const sel = loadoutDraft.includes(k);
+    const lbl = POWERUP_LABELS[k];
+    return `<div class="loadout-row ${sel ? 'selected' : ''}" data-key="${k}">
+      <input type="checkbox" class="loadout-check" ${sel ? 'checked' : ''} />
+      <div>
+        <div class="loadout-name">${lbl.name}</div>
+        <div class="loadout-desc">${lbl.desc}</div>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.loadout-row').forEach(row => {
+    row.addEventListener('click', e => {
+      const k = row.getAttribute('data-key');
+      const idx = loadoutDraft.indexOf(k);
+      if (idx >= 0) loadoutDraft.splice(idx, 1);
+      else if (loadoutDraft.length < 2) loadoutDraft.push(k);
+      renderLoadout();
+      updateLoadoutCounter();
+    });
+  });
+  updateLoadoutCounter();
+}
+function updateLoadoutCounter() {
+  document.getElementById('loadout-counter').textContent = `${loadoutDraft.length} / 2 selected`;
+  document.getElementById('loadout-save').disabled = (loadoutDraft.length !== 2);
+}
+async function saveLoadout() {
+  if (loadoutDraft.length !== 2) return;
+  const token = getPlayerToken();
+  try {
+    if (cachedPlayer && cachedPlayer.token === token) {
+      await sbPatch(`players?token=eq.${encodeURIComponent(token)}`, { preferred_powerups: loadoutDraft });
+      cachedPlayer.preferred_powerups = loadoutDraft.slice();
+    } else {
+      await sbPost('players', { token, name: 'ANON', preferred_powerups: loadoutDraft, total_plays: 0, best_score: 0, streak_days: 0, last_played_date: null, kills_by_type: {}, current_rank: 'RECRUIT', threat_coverage_ever: false });
+      cachedPlayer = { token, preferred_powerups: loadoutDraft.slice() };
+    }
+  } catch (e) { }
+  closeLoadout();
+}
+
+const loadoutBtn = document.getElementById('loadout-btn');
+const loadoutModal = document.getElementById('loadout-modal');
+loadoutBtn.addEventListener('click', openLoadout);
+document.getElementById('loadout-close').addEventListener('click', closeLoadout);
+document.getElementById('loadout-save').addEventListener('click', saveLoadout);
+loadoutModal.addEventListener('click', e => { if (e.target === loadoutModal) closeLoadout(); });
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && !loadoutModal.classList.contains('hidden')) closeLoadout(); });
+
 // Kick off
 loop();
 
 // Load global top scores for title screen best display
 fetchTopScores().then(s => { cachedScores = s; updateTitleBest(); }).catch(() => {});
+updateTitleWeekly();
+startLiveTicker();
 fetchPlayer(getPlayerToken()).then(p => {
   if (!p) return;
   cachedPlayer = p;
+  updateTitleRank();
   if (!titleScreen.classList.contains('hidden')) {
     startTitleCountdown();
   }
