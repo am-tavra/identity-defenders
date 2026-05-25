@@ -836,6 +836,37 @@
     z-index: 5; letter-spacing: 1px;
   }
   .hud-mode-badge.hidden { display: none; }
+  .sector-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0 4px; max-width: 480px; }
+  .sector-chip {
+    font-family: 'Press Start 2P', monospace; font-size: 9px;
+    padding: 7px 10px; background: rgba(10,15,36,0.55);
+    color: var(--text); border: 1px solid rgba(180,200,255,0.25);
+    border-radius: 999px; cursor: pointer; letter-spacing: 0.5px;
+  }
+  .sector-chip.active { background: rgba(255,200,87,0.15); border-color: var(--accent-1); color: var(--accent-1); }
+  .sector-chip[data-sector="FINANCE"].active    { border-color: #3DDC97; color: #3DDC97; background: rgba(61,220,151,0.12); }
+  .sector-chip[data-sector="HEALTHCARE"].active { border-color: #4DD0E1; color: #4DD0E1; background: rgba(77,208,225,0.12); }
+  .sector-chip[data-sector="TECH"].active       { border-color: #FFB74D; color: #FFB74D; background: rgba(255,183,77,0.12); }
+  .sector-chip[data-sector="GOVT"].active       { border-color: #64B5F6; color: #64B5F6; background: rgba(100,181,246,0.12); }
+  .sector-tagline { font-size: 10px; color: var(--dim); height: 14px; margin-bottom: 8px; text-align: center; }
+  @media (max-width: 480px) {
+    .sector-chip { font-size: 8px; padding: 6px 8px; }
+  }
+  .lb-header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .lb-sector-filter {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    background: rgba(10,15,36,0.7); color: var(--text);
+    border: 1px solid rgba(180,200,255,0.25); border-radius: 4px;
+    padding: 4px 6px;
+  }
+  .lb-sector-tag {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    display: inline-block; width: 14px; text-align: center; color: var(--dim);
+  }
+  .lb-sector-tag[data-sector="FINANCE"]    { color: #3DDC97; }
+  .lb-sector-tag[data-sector="HEALTHCARE"] { color: #4DD0E1; }
+  .lb-sector-tag[data-sector="TECH"]       { color: #FFB74D; }
+  .lb-sector-tag[data-sector="GOVT"]       { color: #64B5F6; }
   .title-weekly { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; color: var(--accent-2); margin-bottom: 8px; letter-spacing: 1px; }
   .title-weekly.hidden { display: none; }
   .modifier-card {
@@ -944,6 +975,14 @@
       <div class="streak-line hidden" id="title-streak"></div>
       <div class="title-weekly hidden" id="title-weekly"></div>
       <div class="modifier-card hidden" id="title-modifier"></div>
+      <div class="sector-row" id="title-sector-row" role="radiogroup" aria-label="Sector">
+        <button class="sector-chip active" data-sector="" role="radio" aria-checked="true">MIXED</button>
+        <button class="sector-chip" data-sector="FINANCE" role="radio" aria-checked="false">$ FINANCE</button>
+        <button class="sector-chip" data-sector="HEALTHCARE" role="radio" aria-checked="false">+ HEALTHCARE</button>
+        <button class="sector-chip" data-sector="TECH" role="radio" aria-checked="false">⌬ TECH</button>
+        <button class="sector-chip" data-sector="GOVT" role="radio" aria-checked="false">◈ GOVT</button>
+      </div>
+      <div class="sector-tagline" id="title-sector-tagline"></div>
       <div class="briefing">
         <h3>BRIEFING</h3>
         <div style="margin-bottom: 12px; color: var(--text);">
@@ -991,6 +1030,13 @@
         <div class="daily-seed" id="daily-seed"></div>
         <div class="daily-modifier" id="daily-modifier"></div>
         <div class="daily-weekly" id="daily-weekly"></div>
+        <div class="sector-row" id="daily-sector-row" role="radiogroup" aria-label="Sector">
+          <button class="sector-chip active" data-sector="" role="radio">MIXED</button>
+          <button class="sector-chip" data-sector="FINANCE" role="radio">$ FIN</button>
+          <button class="sector-chip" data-sector="HEALTHCARE" role="radio">+ HLTH</button>
+          <button class="sector-chip" data-sector="TECH" role="radio">⌬ TECH</button>
+          <button class="sector-chip" data-sector="GOVT" role="radio">◈ GOV</button>
+        </div>
         <div class="daily-note">Loadout disabled. Same challenge for everyone today.</div>
         <h3 class="daily-lb-header">TODAY'S TOP DEFENDERS</h3>
         <div class="daily-lb" id="daily-lb-rows"></div>
@@ -1026,7 +1072,16 @@
       </div>
 
       <div class="leaderboard hidden" id="leaderboard">
-        <h4>TOP DEFENDERS</h4>
+        <div class="lb-header-row">
+          <h4>TOP DEFENDERS</h4>
+          <select class="lb-sector-filter" id="lb-sector-filter" aria-label="Filter by sector">
+            <option value="">ALL SECTORS</option>
+            <option value="FINANCE">FINANCE</option>
+            <option value="HEALTHCARE">HEALTHCARE</option>
+            <option value="TECH">TECH</option>
+            <option value="GOVT">GOVT</option>
+          </select>
+        </div>
         <div id="leaderboard-rows"></div>
       </div>
 
@@ -1286,6 +1341,43 @@ const WEEKLY_BUFFS = [
     effects: { points: 1.15 } }
 ];
 
+const SECTORS = {
+  FINANCE: {
+    key: 'FINANCE', label: 'FINANCE', icon: '$',
+    accent: '#3DDC97',
+    tagline: 'Fraud detection. Watch the credentials and the agents.',
+    formationDensity: { AGENT: 1.5, CRED: 1.5, NHI: 0.7, DRONE: 0.7 },
+    specialRatio:     { LOTL: 1.0, SANCTIONED: 1.0, SCATTERED: 0.8 }
+  },
+  HEALTHCARE: {
+    key: 'HEALTHCARE', label: 'HEALTHCARE', icon: '+',
+    accent: '#4DD0E1',
+    tagline: 'PHI access is mostly legitimate. Read intent before you fire.',
+    formationDensity: { AGENT: 0.8, CRED: 1.0, NHI: 0.9, DRONE: 1.0 },
+    specialRatio:     { LOTL: 1.4, SANCTIONED: 1.8, SCATTERED: 0.6 }
+  },
+  TECH: {
+    key: 'TECH', label: 'TECH', icon: '⌬',
+    accent: '#FFB74D',
+    tagline: 'Shadow IT and NHIs everywhere. Service accounts are noisy.',
+    formationDensity: { AGENT: 0.9, CRED: 0.9, NHI: 1.6, DRONE: 1.4 },
+    specialRatio:     { LOTL: 1.0, SANCTIONED: 0.9, SCATTERED: 1.0 }
+  },
+  GOVT: {
+    key: 'GOVT', label: 'GOVT', icon: '◈',
+    accent: '#64B5F6',
+    tagline: 'Scattered Spider raids and AI ops. Help desk under siege.',
+    formationDensity: { AGENT: 1.3, CRED: 1.0, NHI: 1.0, DRONE: 0.9 },
+    specialRatio:     { LOTL: 0.8, SANCTIONED: 1.0, SCATTERED: 1.5 }
+  }
+};
+
+function sectorRaidInterval() {
+  const w = SECTORS[game.sector]?.specialRatio?.SCATTERED;
+  if (!w) return 4;
+  return Math.max(2, Math.round(4 / w));
+}
+
 const DEFENDER_RANKS = [
   { key: 'PRINCIPAL', label: 'PRINCIPAL SOC ARCHITECT',
     min: { plays: 200, best: 50000, streak: 14, threatCoverage: true } },
@@ -1424,7 +1516,8 @@ const game = {
   mode: 'free',
   dailySeed: null,
   dailyDateStr: null,
-  dailyInsiderWaves: null
+  dailyInsiderWaves: null,
+  sector: null
 };
 
 // ===========================================================================
@@ -1449,6 +1542,15 @@ const puTrayEl = document.getElementById('pu-tray');
 const intelBtn = document.getElementById('intel-btn');
 const dossierModal = document.getElementById('dossier-modal');
 
+currentSectorPick = loadSectorPref();
+setSector(currentSectorPick);
+
+document.getElementById('title-sector-row').addEventListener('click', (e) => {
+  const btn = e.target.closest('.sector-chip');
+  if (!btn) return;
+  setSector(btn.dataset.sector || null);
+});
+
 startBtn.addEventListener('click', () => startGame('free'));
 restartBtn.addEventListener('click', () => startGame(game.mode || 'free'));
 intelBtn.addEventListener('click', openDossier);
@@ -1456,10 +1558,25 @@ document.getElementById('daily-btn').addEventListener('click', openDailyBriefing
 document.getElementById('daily-close').addEventListener('click', closeDailyBriefing);
 document.getElementById('daily-play-btn').addEventListener('click', () => { closeDailyBriefing(); startGame('daily'); });
 document.getElementById('daily-modal').addEventListener('click', (e) => { if (e.target.id === 'daily-modal') closeDailyBriefing(); });
+document.getElementById('daily-sector-row').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.sector-chip'); if (!btn) return;
+  setSector(btn.dataset.sector || null);
+  renderSectorChips('#daily-sector-row', currentSectorPick);
+  await refreshDailyLb(utcDateStringNow());
+});
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.getElementById('daily-modal').classList.contains('hidden')) closeDailyBriefing(); });
 document.getElementById('dossier-close').addEventListener('click', closeDossier);
 dossierModal.addEventListener('click', onDossierBackdrop);
 window.addEventListener('keydown', onDossierEsc);
+
+document.getElementById('lb-sector-filter').addEventListener('change', async (e) => {
+  const raw = e.target.value;
+  const sec = ['FINANCE','HEALTHCARE','TECH','GOVT'].includes(raw) ? raw : null;
+  cachedScores = game.mode === 'daily'
+    ? await fetchDailyTopScores(game.dailyDateStr, sec)
+    : await fetchTopScores(sec);
+  renderLeaderboard(cachedPlayer?.name);
+});
 
 // Score system + sharing wiring
 document.getElementById('submit-name-btn').addEventListener('click', submitName);
@@ -1644,28 +1761,55 @@ function getPlayerToken() {
   return t;
 }
 
-async function fetchTopScores() {
-  const rows = await sbGet('scores?select=player_id,name,score,wave,players(streak_days,total_plays)'
-    + '&game_mode=eq.free'
-    + '&order=score.desc&limit=' + MAX_SCORES);
+let currentSectorPick = null;
+function loadSectorPref() {
+  const v = localStorage.getItem('id_defender_sector_v1') || '';
+  return ['FINANCE','HEALTHCARE','TECH','GOVT'].includes(v) ? v : null;
+}
+function saveSectorPref(v) {
+  if (!v) localStorage.removeItem('id_defender_sector_v1');
+  else localStorage.setItem('id_defender_sector_v1', v);
+}
+function renderSectorChips(rootSel, current) {
+  document.querySelectorAll(`${rootSel} .sector-chip`).forEach(btn => {
+    const sec = btn.dataset.sector || null;
+    const on = (sec === current) || (!sec && !current);
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+  });
+}
+function setSector(v) {
+  currentSectorPick = v || null;
+  saveSectorPref(currentSectorPick);
+  renderSectorChips('#title-sector-row', currentSectorPick);
+  const tag = document.getElementById('title-sector-tagline');
+  if (tag) tag.textContent = currentSectorPick ? SECTORS[currentSectorPick].tagline : '';
+}
+
+async function fetchTopScores(sector = null) {
+  let path = 'scores?select=player_id,name,score,wave,sector,players(streak_days,total_plays)'
+    + '&game_mode=eq.free';
+  if (sector) path += `&sector=eq.${encodeURIComponent(sector)}`;
+  path += '&order=score.desc&limit=' + MAX_SCORES;
+  const rows = await sbGet(path);
   return Array.isArray(rows) ? rows.map(r => ({
-    player_id: r.player_id,
-    name: r.name, score: r.score, wave: r.wave,
+    player_id: r.player_id, name: r.name, score: r.score, wave: r.wave,
+    sector: r.sector || null,
     streak_days: r.players?.streak_days || 0,
     total_plays: r.players?.total_plays || 0
   })) : [];
 }
 
-async function fetchDailyTopScores(dateStr) {
+async function fetchDailyTopScores(dateStr, sector = null) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return [];
-  const path = `daily_leaderboard?select=player_id,name,score,wave,players(streak_days,total_plays)`
-             + `&play_date=eq.${encodeURIComponent(dateStr)}`
-             + `&order=score.desc`
-             + `&limit=${MAX_SCORES}`;
+  let path = `daily_leaderboard?select=player_id,name,score,wave,sector,players(streak_days,total_plays)`
+           + `&play_date=eq.${encodeURIComponent(dateStr)}`;
+  if (sector) path += `&sector=eq.${encodeURIComponent(sector)}`;
+  path += `&order=score.desc&limit=${MAX_SCORES}`;
   const rows = await sbGet(path);
   return Array.isArray(rows) ? rows.map(r => ({
-    player_id: r.player_id,
-    name: r.name, score: r.score, wave: r.wave,
+    player_id: r.player_id, name: r.name, score: r.score, wave: r.wave,
+    sector: r.sector || null,
     streak_days: r.players?.streak_days || 0,
     total_plays: r.players?.total_plays || 0
   })) : [];
@@ -1708,7 +1852,7 @@ async function upsertPlayer(token, name, score) {
   }
 }
 
-async function insertScore(playerId, name, score, wave, stats, mode, playDate, seed) {
+async function insertScore(playerId, name, score, wave, stats, mode, playDate, seed, sector) {
   await sbPost('scores', {
     player_id: playerId,
     name, score, wave,
@@ -1724,7 +1868,8 @@ async function insertScore(playerId, name, score, wave, stats, mode, playDate, s
     score_multiplier:    stats?.scoreMultiplier    ?? 1.0,
     game_mode:           mode || 'free',
     play_date:           playDate || null,
-    daily_seed:          seed || null
+    daily_seed:          seed || null,
+    sector:              sector || null
   });
 }
 
@@ -1813,10 +1958,12 @@ function renderLeaderboard(highlightName = null) {
     container.innerHTML = '<div class="lb-empty">No scores yet — be the first defender</div>';
     return;
   }
+  const sectorAbbr = s => s ? ({FINANCE:'$', HEALTHCARE:'+', TECH:'⌬', GOVT:'◈'}[s]) : '·';
   container.innerHTML = scores.slice(0, DISPLAY_COUNT).map((s, i) => {
     const isYou = highlightName && s.name === highlightName;
     return `<div class="lb-row rank-${i+1}${isYou ? ' you' : ''}">
       <span class="lb-rank">${i+1}</span>
+      <span class="lb-sector-tag" data-sector="${s.sector || ''}">${sectorAbbr(s.sector)}</span>
       <span class="lb-name">${escapeHtml(s.name)}</span>
       <span class="lb-score">${s.score.toLocaleString()}</span>
       <span class="lb-wave">Q${s.wave}</span>
@@ -2020,6 +2167,13 @@ function renderDailyLeaderboard(rows) {
   `).join('');
 }
 
+async function refreshDailyLb(dateStr) {
+  try {
+    const rows = await fetchDailyTopScores(dateStr, currentSectorPick);
+    renderDailyLeaderboard(rows);
+  } catch (e) { /* silent */ }
+}
+
 async function openDailyBriefing() {
   const dateStr = utcDateStringNow();
   const seed    = seedFromDate(dateStr);
@@ -2032,13 +2186,11 @@ async function openDailyBriefing() {
   renderDailyLeaderboard([]);
   document.getElementById('daily-modal').classList.remove('hidden');
   document.getElementById('daily-close').focus();
+  renderSectorChips('#daily-sector-row', currentSectorPick);
   tickDailyReset();
   if (dailyResetTimer) clearInterval(dailyResetTimer);
   dailyResetTimer = setInterval(tickDailyReset, 1000);
-  try {
-    const rows = await fetchDailyTopScores(dateStr);
-    renderDailyLeaderboard(rows);
-  } catch (e) { /* silent */ }
+  await refreshDailyLb(dateStr);
 }
 
 function closeDailyBriefing() {
@@ -2222,6 +2374,24 @@ async function generateShareCard() {
     cx.shadowBlur = 0;
   }
 
+  if (game.sector) {
+    const sec = SECTORS[game.sector];
+    cx.font = "bold 14px 'Press Start 2P', 'Courier New', monospace";
+    cx.textAlign = 'center';
+    const txt = `${sec.icon} ${sec.label}`;
+    const bw = cx.measureText(txt).width + 28;
+    const bx = W - bw - 28, by = 28;
+    cx.fillStyle = 'rgba(10,15,36,0.75)';
+    cx.beginPath();
+    if (cx.roundRect) cx.roundRect(bx, by, bw, 28, 14); else cx.rect(bx, by, bw, 28);
+    cx.fill();
+    cx.strokeStyle = sec.accent; cx.lineWidth = 1; cx.stroke();
+    cx.fillStyle = sec.accent;
+    cx.shadowColor = sec.accent; cx.shadowBlur = 8;
+    cx.fillText(txt, bx + bw/2, by + 19);
+    cx.shadowBlur = 0;
+  }
+
   // Corner sprites
   drawCardSentinel(cx, 90, 560, 2);
   drawCardAgent(cx, W - 90, 560, 2.4);
@@ -2330,17 +2500,19 @@ async function submitName() {
   document.getElementById('name-entry').classList.add('hidden');
   const token  = getPlayerToken();
   cachedPlayer = await upsertPlayer(token, name, game.score);
-  await insertScore(cachedPlayer.id, name, game.score, game.wave, game.stats, game.mode, game.dailyDateStr, game.dailySeed);
+  await insertScore(cachedPlayer.id, name, game.score, game.wave, game.stats, game.mode, game.dailyDateStr, game.dailySeed, game.sector);
   if (email) await insertLead(cachedPlayer.id, email);
   cachedScores = game.mode === 'daily'
-    ? await fetchDailyTopScores(game.dailyDateStr)
-    : await fetchTopScores();
+    ? await fetchDailyTopScores(game.dailyDateStr, game.sector)
+    : await fetchTopScores(game.sector);
   const globalRank = (cachedPlayer?.id
     ? cachedScores.findIndex(s => s.player_id === cachedPlayer.id)
     : cachedScores.findIndex(s => s.name === name && s.score === game.score)) + 1 || 99;
   const badges = computeBadges(cachedPlayer, globalRank, game.stats);
   renderBadgeRow(badges);
   renderLeaderboard(name);
+  const _sel = document.getElementById('lb-sector-filter');
+  if (_sel) _sel.value = game.sector || '';
   updateTitleBest();
   showShareCardPreview();
 }
@@ -2426,6 +2598,14 @@ function updatePlayer() {
 // ===========================================================================
 let nextEnemyId = 1;
 
+function pickCenteredCols(n, center, min, max, pool = null) {
+  if (n <= 0) return [];
+  const all = pool ? pool.slice() : [];
+  if (!pool) for (let c = min; c <= max; c++) all.push(c);
+  all.sort((a, b) => Math.abs(a - center) - Math.abs(b - center));
+  return all.slice(0, Math.min(n, all.length)).sort((a, b) => a - b);
+}
+
 function buildWave(waveNum) {
   game.enemies = [];
   const cols = 10;
@@ -2438,25 +2618,38 @@ function buildWave(waveNum) {
   const allow = (type) => !onlySpawn || onlySpawn.includes(type);
   const extraNhi = !!game.modifier?.effects?.extraNhiInBuildWave;
   const credBoost = (game.weekly?.effects?.credSpawnBoost) || 1;
+  const density = SECTORS[game.sector]?.formationDensity || null;
+  const scale = (type, baseCount) => {
+    const m = density?.[type] ?? 1.0;
+    return Math.max(0, Math.min(Math.round(baseCount * m), baseCount * 2));
+  };
 
   if (allow('AGENT')) {
-    for (let c = 3; c <= 6; c++) addFormationEnemy('AGENT', c, 0, startX, startY, colSpacing, rowSpacing);
+    const n = scale('AGENT', 4);
+    const cols0 = pickCenteredCols(n, 4.5, 0, 9);
+    for (const c of cols0) addFormationEnemy('AGENT', c, 0, startX, startY, colSpacing, rowSpacing);
   }
   if (allow('NHI')) {
-    const nhiCols = extraNhi ? [1,2,3,4,5,6,7,8] : [2,3,4,5,6,7];
+    const baseCols = extraNhi ? [1,2,3,4,5,6,7,8] : [2,3,4,5,6,7];
+    const n = scale('NHI', baseCols.length);
+    const nhiCols = pickCenteredCols(n, 4.5, 0, 9, baseCols);
     for (const c of nhiCols) addFormationEnemy('NHI', c, 1, startX, startY, colSpacing, rowSpacing);
   }
   if (allow('CRED')) {
     const credRows = credBoost > 1 ? 3 : 2;
+    const n = scale('CRED', 8);
+    const credCols = pickCenteredCols(n, 4.5, 1, 8);
     for (let r = 2; r < 2 + credRows; r++) {
-      for (let c = 1; c <= 8; c++) addFormationEnemy('CRED', c, r, startX, startY, colSpacing, rowSpacing);
+      for (const c of credCols) addFormationEnemy('CRED', c, r, startX, startY, colSpacing, rowSpacing);
     }
   }
   if (allow('DRONE')) {
     const blueRows = Math.max(1, 2 - Math.floor((waveNum-1)/3));
     const droneStartRow = (credBoost > 1) ? 5 : 4;
+    const n = scale('DRONE', cols);
+    const droneCols = pickCenteredCols(n, 4.5, 0, cols - 1);
     for (let r = droneStartRow; r < droneStartRow + blueRows; r++) {
-      for (let c = 0; c < cols; c++) addFormationEnemy('DRONE', c, r, startX, startY, colSpacing, rowSpacing);
+      for (const c of droneCols) addFormationEnemy('DRONE', c, r, startX, startY, colSpacing, rowSpacing);
     }
   }
 
@@ -2680,11 +2873,16 @@ function launchDive(e, leader=null) {
 // LOTL & SANCTIONED SPAWNS
 // ===========================================================================
 function tryTriggerSpecial() {
-  // Spawn LOTL impostors and sanctioned users occasionally
   game.spawnTimer--;
   if (game.spawnTimer > 0) return;
   game.spawnTimer = rand(220, 360);
-  if (chance(0.55) && game.wave >= 1) {
+  if (game.wave < 1) return;
+  const w = SECTORS[game.sector]?.specialRatio || { LOTL: 1.0, SANCTIONED: 1.0, SCATTERED: 1.0 };
+  const lotlW = 0.55 * (w.LOTL ?? 1);
+  const sancW = 0.45 * (w.SANCTIONED ?? 1);
+  const total = lotlW + sancW;
+  const r = (game.rngFn ? game.rngFn() : Math.random()) * total;
+  if (r < lotlW) {
     spawnLOTL();
   } else {
     spawnSanctioned();
@@ -2734,8 +2932,7 @@ function spawnSanctioned() {
 // ===========================================================================
 function maybeTriggerSpiderRaid() {
   if (game.spiderRaid) return;
-  // Trigger every 4 waves starting at wave 4
-  if (game.wave < 4 || (game.wave - 4) % 4 !== 0) return;
+  if (game.wave < 4 || (game.wave - 4) % sectorRaidInterval() !== 0) return;
   // Only trigger once per wave
   if (game._spiderTriggeredOnWave === game.wave) return;
   game._spiderTriggeredOnWave = game.wave;
@@ -3748,6 +3945,7 @@ function loop() {
 // ===========================================================================
 function startGame(mode = 'free') {
   ensureAudio();
+  game.sector = currentSectorPick;
   game.score = 0;
   game.lives = 3;
   game.wave = 1;
@@ -3800,8 +3998,12 @@ function startGame(mode = 'free') {
   titleScreen.classList.add('hidden');
   const modeBadge = document.getElementById('hud-mode-badge');
   if (modeBadge) {
+    const sectorSuffix = game.sector ? ' · ' + SECTORS[game.sector].label : '';
     if (game.mode === 'daily') {
-      modeBadge.textContent = 'DAILY · #' + game.dailySeed.toString(16).slice(0, 6).toUpperCase();
+      modeBadge.textContent = 'DAILY · #' + game.dailySeed.toString(16).slice(0,6).toUpperCase() + sectorSuffix;
+      modeBadge.classList.remove('hidden');
+    } else if (game.sector) {
+      modeBadge.textContent = SECTORS[game.sector].label;
       modeBadge.classList.remove('hidden');
     } else {
       modeBadge.classList.add('hidden');
@@ -3853,8 +4055,10 @@ async function gameOver() {
   document.getElementById('download-card-btn').style.display = game.score > 0 ? '' : 'none';
 
   cachedScores = game.mode === 'daily'
-    ? await fetchDailyTopScores(game.dailyDateStr)
-    : await fetchTopScores();
+    ? await fetchDailyTopScores(game.dailyDateStr, game.sector)
+    : await fetchTopScores(game.sector);
+  const _lbSel = document.getElementById('lb-sector-filter');
+  if (_lbSel) _lbSel.value = game.sector || '';
 
   // Show returning player's existing badges immediately
   const token = getPlayerToken();
