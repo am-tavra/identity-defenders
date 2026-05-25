@@ -1025,14 +1025,6 @@
       <div class="streak-line hidden" id="title-streak"></div>
       <div class="title-weekly hidden" id="title-weekly"></div>
       <div class="modifier-card hidden" id="title-modifier"></div>
-      <div class="sector-row" id="title-sector-row" role="radiogroup" aria-label="Sector">
-        <button class="sector-chip active" data-sector="" role="radio" aria-checked="true">MIXED</button>
-        <button class="sector-chip" data-sector="FINANCE" role="radio" aria-checked="false">$ FINANCE</button>
-        <button class="sector-chip" data-sector="HEALTHCARE" role="radio" aria-checked="false">+ HEALTHCARE</button>
-        <button class="sector-chip" data-sector="TECH" role="radio" aria-checked="false">⌬ TECH</button>
-        <button class="sector-chip" data-sector="GOVT" role="radio" aria-checked="false">◈ GOVT</button>
-      </div>
-      <div class="sector-tagline" id="title-sector-tagline"></div>
       <div class="briefing">
         <h3>BRIEFING</h3>
         <div style="margin-bottom: 12px; color: var(--text);">
@@ -1112,13 +1104,6 @@
         <div class="daily-seed" id="daily-seed"></div>
         <div class="daily-modifier" id="daily-modifier"></div>
         <div class="daily-weekly" id="daily-weekly"></div>
-        <div class="sector-row" id="daily-sector-row" role="radiogroup" aria-label="Sector">
-          <button class="sector-chip active" data-sector="" role="radio">MIXED</button>
-          <button class="sector-chip" data-sector="FINANCE" role="radio">$ FIN</button>
-          <button class="sector-chip" data-sector="HEALTHCARE" role="radio">+ HLTH</button>
-          <button class="sector-chip" data-sector="TECH" role="radio">⌬ TECH</button>
-          <button class="sector-chip" data-sector="GOVT" role="radio">◈ GOV</button>
-        </div>
         <div class="daily-note">Loadout disabled. Same challenge for everyone today.</div>
         <h3 class="daily-lb-header">TODAY'S TOP DEFENDERS</h3>
         <div class="daily-lb" id="daily-lb-rows"></div>
@@ -1159,13 +1144,6 @@
           <select class="lb-sector-filter" id="lb-scope-filter" aria-label="Filter scope">
             <option value="ALL">ALL</option>
             <option value="FRIENDS">FRIENDS</option>
-          </select>
-          <select class="lb-sector-filter" id="lb-sector-filter" aria-label="Filter by sector">
-            <option value="">ALL SECTORS</option>
-            <option value="FINANCE">FINANCE</option>
-            <option value="HEALTHCARE">HEALTHCARE</option>
-            <option value="TECH">TECH</option>
-            <option value="GOVT">GOVT</option>
           </select>
         </div>
         <div id="leaderboard-rows"></div>
@@ -1512,6 +1490,10 @@ function isoWeekNumber(d = new Date()) {
 function computeWeeklyBuff() {
   return WEEKLY_BUFFS[isoWeekNumber() % 7];
 }
+function computeWeeklySector() {
+  const cycle = [null, 'FINANCE', 'HEALTHCARE', 'TECH', 'GOVT'];
+  return cycle[isoWeekNumber() % 5];
+}
 
 function weeklyPointsMult(enemyType) {
   const w = game.weekly;
@@ -1630,15 +1612,6 @@ const puTrayEl = document.getElementById('pu-tray');
 const intelBtn = document.getElementById('intel-btn');
 const dossierModal = document.getElementById('dossier-modal');
 
-let currentSectorPick = loadSectorPref();
-setSector(currentSectorPick);
-
-document.getElementById('title-sector-row').addEventListener('click', (e) => {
-  const btn = e.target.closest('.sector-chip');
-  if (!btn) return;
-  setSector(btn.dataset.sector || null);
-});
-
 startBtn.addEventListener('click', () => startGame('free'));
 restartBtn.addEventListener('click', () => startGame(game.mode || 'free'));
 intelBtn.addEventListener('click', openDossier);
@@ -1646,12 +1619,6 @@ document.getElementById('daily-btn').addEventListener('click', openDailyBriefing
 document.getElementById('daily-close').addEventListener('click', closeDailyBriefing);
 document.getElementById('daily-play-btn').addEventListener('click', () => { closeDailyBriefing(); startGame('daily'); });
 document.getElementById('daily-modal').addEventListener('click', (e) => { if (e.target.id === 'daily-modal') closeDailyBriefing(); });
-document.getElementById('daily-sector-row').addEventListener('click', async (e) => {
-  const btn = e.target.closest('.sector-chip'); if (!btn) return;
-  setSector(btn.dataset.sector || null);
-  renderSectorChips('#daily-sector-row', currentSectorPick);
-  await refreshDailyLb(utcDateStringNow());
-});
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.getElementById('daily-modal').classList.contains('hidden')) closeDailyBriefing(); });
 document.getElementById('dossier-close').addEventListener('click', closeDossier);
 dossierModal.addEventListener('click', onDossierBackdrop);
@@ -1659,20 +1626,16 @@ window.addEventListener('keydown', onDossierEsc);
 
 async function refreshGameOverLeaderboard() {
   const scopeSel = document.getElementById('lb-scope-filter');
-  const sectorSel = document.getElementById('lb-sector-filter');
   const scope = scopeSel?.value || 'ALL';
-  const raw = sectorSel?.value;
-  const sec = ['FINANCE','HEALTHCARE','TECH','GOVT'].includes(raw) ? raw : null;
   const friendIds = (scope === 'FRIENDS' && cachedPlayer?.id)
     ? [cachedPlayer.id, ...cachedFriendIds]
     : null;
   cachedScores = game.mode === 'daily'
-    ? await fetchDailyTopScores(game.dailyDateStr, sec, friendIds)
-    : await fetchTopScores(sec, friendIds);
+    ? await fetchDailyTopScores(game.dailyDateStr, null, friendIds)
+    : await fetchTopScores(null, friendIds);
   renderLeaderboard(cachedPlayer?.name);
 }
 document.getElementById('lb-scope-filter').addEventListener('change', refreshGameOverLeaderboard);
-document.getElementById('lb-sector-filter').addEventListener('change', refreshGameOverLeaderboard);
 
 // Score system + sharing wiring
 document.getElementById('submit-name-btn').addEventListener('click', submitName);
@@ -1867,29 +1830,6 @@ function getPlayerToken() {
   return t;
 }
 
-function loadSectorPref() {
-  const v = localStorage.getItem('id_defender_sector_v1') || '';
-  return ['FINANCE','HEALTHCARE','TECH','GOVT'].includes(v) ? v : null;
-}
-function saveSectorPref(v) {
-  if (!v) localStorage.removeItem('id_defender_sector_v1');
-  else localStorage.setItem('id_defender_sector_v1', v);
-}
-function renderSectorChips(rootSel, current) {
-  document.querySelectorAll(`${rootSel} .sector-chip`).forEach(btn => {
-    const sec = btn.dataset.sector || null;
-    const on = (sec === current) || (!sec && !current);
-    btn.classList.toggle('active', on);
-    btn.setAttribute('aria-checked', on ? 'true' : 'false');
-  });
-}
-function setSector(v) {
-  currentSectorPick = v || null;
-  saveSectorPref(currentSectorPick);
-  renderSectorChips('#title-sector-row', currentSectorPick);
-  const tag = document.getElementById('title-sector-tagline');
-  if (tag) tag.textContent = currentSectorPick ? SECTORS[currentSectorPick].tagline : '';
-}
 
 async function fetchTopScores(sector = null, friendIds = null) {
   if (Array.isArray(friendIds) && friendIds.length === 0) return [];
@@ -2194,7 +2134,9 @@ function updateTitleWeekly() {
   const el = document.getElementById('title-weekly');
   if (!el) return;
   const w = computeWeeklyBuff();
-  el.textContent = `THIS WEEK · ${w.label}`;
+  const s = computeWeeklySector();
+  const sectorLabel = s ? `${SECTORS[s].icon} ${SECTORS[s].label}` : 'MIXED';
+  el.innerHTML = `THIS WEEK · <span class="num">${sectorLabel}</span> SECTOR · ${escapeHtml(w.label)}`;
   el.classList.remove('hidden');
 }
 function updateTitleRank() {
@@ -2333,9 +2275,9 @@ function renderDailyLeaderboard(rows) {
 
 async function refreshDailyLb(dateStr) {
   try {
-    const rows = await fetchDailyTopScores(dateStr, currentSectorPick);
+    const rows = await fetchDailyTopScores(dateStr, null);
     renderDailyLeaderboard(rows);
-  } catch (e) { /* silent */ }
+  } catch (e) { }
 }
 
 async function openDailyBriefing() {
@@ -2346,11 +2288,12 @@ async function openDailyBriefing() {
   document.getElementById('daily-date').textContent = dateStr;
   document.getElementById('daily-seed').textContent = 'SEED · #' + seed.toString(16).slice(0, 8).toUpperCase();
   document.getElementById('daily-modifier').textContent = 'MODIFIER · ' + modifier.label;
-  document.getElementById('daily-weekly').textContent   = 'THIS WEEK · ' + weekly.label;
+  const ws = computeWeeklySector();
+  const wsLabel = ws ? `${SECTORS[ws].icon} ${SECTORS[ws].label}` : 'MIXED';
+  document.getElementById('daily-weekly').textContent   = 'THIS WEEK · ' + wsLabel + ' · ' + weekly.label;
   renderDailyLeaderboard([]);
   document.getElementById('daily-modal').classList.remove('hidden');
   document.getElementById('daily-close').focus();
-  renderSectorChips('#daily-sector-row', currentSectorPick);
   tickDailyReset();
   if (dailyResetTimer) clearInterval(dailyResetTimer);
   dailyResetTimer = setInterval(tickDailyReset, 1000);
@@ -2675,8 +2618,6 @@ async function submitName() {
   const badges = computeBadges(cachedPlayer, globalRank, game.stats);
   renderBadgeRow(badges);
   renderLeaderboard(name);
-  const _sel = document.getElementById('lb-sector-filter');
-  if (_sel) _sel.value = game.sector || '';
   updateTitleBest();
   showShareCardPreview();
 }
@@ -4109,7 +4050,7 @@ function loop() {
 // ===========================================================================
 function startGame(mode = 'free') {
   ensureAudio();
-  game.sector = currentSectorPick;
+  game.sector = computeWeeklySector();
   game.score = 0;
   game.lives = 3;
   game.wave = 1;
@@ -4221,8 +4162,6 @@ async function gameOver() {
   cachedScores = game.mode === 'daily'
     ? await fetchDailyTopScores(game.dailyDateStr, game.sector)
     : await fetchTopScores(game.sector);
-  const _lbSel = document.getElementById('lb-sector-filter');
-  if (_lbSel) _lbSel.value = game.sector || '';
 
   // Show returning player's existing badges immediately
   const token = getPlayerToken();
