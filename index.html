@@ -940,15 +940,12 @@
   }
   .rank-line.hidden { display: none; }
   .live-ticker {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    width: 200px;
+    width: 100%;
+    max-width: 320px;
+    margin: 14px auto 0;
     font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
     font-size: 9px;
     color: var(--dim);
-    z-index: 6;
-    pointer-events: none;
   }
   body.touch-device .live-ticker { display: none !important; }
   .live-ticker.hidden { display: none; }
@@ -1042,6 +1039,7 @@
       <button class="start-btn intel-btn" id="intel-btn">📋 THREAT INTEL</button>
       <button class="start-btn intel-btn" id="loadout-btn">🎯 LOADOUT</button>
       <button class="start-btn intel-btn" id="friends-btn">👥 FRIENDS</button>
+      <div class="live-ticker hidden" id="live-ticker"></div>
     </div>
 
     <div class="dossier-modal hidden" id="dossier-modal" role="dialog" aria-modal="true" aria-labelledby="dossier-title">
@@ -1115,7 +1113,6 @@
     </div>
 
     <div class="hud-mode-badge hidden" id="hud-mode-badge"></div>
-    <div class="live-ticker hidden" id="live-ticker"></div>
 
     <!-- Game over screen -->
     <div class="overlay hidden" id="gameover-screen">
