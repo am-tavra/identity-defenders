@@ -868,6 +868,51 @@
   .lb-sector-tag[data-sector="TECH"]       { color: #FFB74D; }
   .lb-sector-tag[data-sector="GOVT"]       { color: #64B5F6; }
   .title-weekly { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; color: var(--accent-2); margin-bottom: 8px; letter-spacing: 1px; }
+  .friend-code-line {
+    display: inline-flex; gap: 8px; align-items: center;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 9px; color: var(--dim); margin-bottom: 8px; letter-spacing: 1px;
+  }
+  .friend-code-line.hidden { display: none; }
+  .fc-label { color: var(--dim); }
+  .fc-value { color: var(--accent-1); letter-spacing: 1.5px; user-select: all; }
+  .fc-copy { background: transparent; border: 1px solid rgba(255,255,255,0.18);
+    color: var(--text); padding: 2px 6px; cursor: pointer; border-radius: 4px;
+    font-size: 11px; line-height: 1; }
+  .fc-copy:hover { background: rgba(255,200,87,0.10); }
+  .fc-copy.copied { color: var(--accent-2); border-color: var(--accent-2); }
+  .fc-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  #add-friend-input {
+    flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--text); font-family: 'Press Start 2P','Courier New',monospace;
+    font-size: 11px; padding: 8px 10px; letter-spacing: 2px; text-transform: uppercase;
+  }
+  #add-friend-input:focus { outline: none; border-color: var(--accent-1); }
+  .fc-err { font-size: 10px; color: var(--accent-3); min-height: 14px; margin-bottom: 8px; }
+  .fc-preview {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 6px; padding: 10px 12px; margin-bottom: 12px;
+  }
+  .fc-preview.hidden { display: none; }
+  .fc-preview-name { font-family: 'Press Start 2P','Courier New',monospace; font-size: 11px; color: var(--accent-1); margin-bottom: 4px; }
+  .fc-preview-meta { font-size: 10px; color: var(--dim); }
+  .friends-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; max-height: 320px; overflow-y: auto; }
+  .friend-row {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 8px;
+    padding: 8px 10px; background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; align-items: center;
+  }
+  .friend-row-name { font-family: 'Press Start 2P','Courier New',monospace; font-size: 10px; color: var(--text); }
+  .friend-row-meta { font-size: 9px; color: var(--dim); }
+  .friend-row-best { font-size: 10px; color: var(--accent-1); }
+  .friend-row-remove {
+    background: transparent; border: 1px solid rgba(255,90,90,0.4);
+    color: #ff7a7a; padding: 4px 8px; font-size: 9px; cursor: pointer; border-radius: 4px;
+  }
+  .friend-row-remove:hover { background: rgba(255,90,90,0.12); }
+  .friend-row-remove.confirming { background: rgba(255,90,90,0.18); }
+  .friends-empty { font-size: 11px; color: var(--dim); text-align: center; padding: 18px 0; }
+  .lb-empty { font-size: 11px; color: var(--dim); text-align: center; padding: 12px 0; }
   .title-weekly.hidden { display: none; }
   .modifier-card {
     font-family: 'Press Start 2P', 'Courier New', monospace;
@@ -971,6 +1016,11 @@
       <div class="title-main">IDENTITY<br>DEFENDER</div>
       <div class="tagline">HACKERS DON'T HACK IN <span>·</span> THEY LOG IN</div>
       <div class="title-best hidden" id="title-best">PERSONAL BEST · <span id="title-best-score">0</span></div>
+      <div class="friend-code-line hidden" id="title-friend-code">
+        <span class="fc-label">YOUR CODE</span>
+        <span class="fc-value" id="title-friend-code-value">—</span>
+        <button class="fc-copy" id="title-friend-code-copy" aria-label="Copy friend code">📋</button>
+      </div>
       <div class="rank-line hidden" id="title-rank"></div>
       <div class="streak-line hidden" id="title-streak"></div>
       <div class="title-weekly hidden" id="title-weekly"></div>
@@ -999,6 +1049,7 @@
       <button class="start-btn" id="start-btn">FREE PLAY</button>
       <button class="start-btn intel-btn" id="intel-btn">📋 THREAT INTEL</button>
       <button class="start-btn intel-btn" id="loadout-btn">🎯 LOADOUT</button>
+      <button class="start-btn intel-btn" id="friends-btn">👥 FRIENDS</button>
     </div>
 
     <div class="dossier-modal hidden" id="dossier-modal" role="dialog" aria-modal="true" aria-labelledby="dossier-title">
@@ -1018,6 +1069,37 @@
         <div class="loadout-actions">
           <span class="loadout-counter" id="loadout-counter">0 / 2 selected</span>
           <button class="start-btn" id="loadout-save" disabled>SAVE LOADOUT</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dossier-modal hidden" id="add-friend-modal" role="dialog" aria-modal="true" aria-labelledby="add-friend-title">
+      <div class="dossier-card" role="document">
+        <button class="dossier-close" id="add-friend-close" aria-label="Close">✕</button>
+        <h2 id="add-friend-title">ADD FRIEND</h2>
+        <div class="loadout-hint">Enter a friend's code. They'll appear on your FRIENDS leaderboard.</div>
+        <div class="fc-input-row">
+          <input type="text" id="add-friend-input" placeholder="ID-XXXX-XXXX" maxlength="11" autocomplete="off" spellcheck="false" />
+          <button class="start-btn" id="add-friend-lookup" disabled>LOOKUP</button>
+        </div>
+        <div class="fc-err" id="add-friend-err" role="alert"></div>
+        <div class="fc-preview hidden" id="add-friend-preview"></div>
+        <div class="loadout-actions">
+          <span></span>
+          <button class="start-btn" id="add-friend-confirm" disabled>ADD FRIEND</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dossier-modal hidden" id="friends-list-modal" role="dialog" aria-modal="true" aria-labelledby="friends-list-title">
+      <div class="dossier-card" role="document">
+        <button class="dossier-close" id="friends-list-close" aria-label="Close">✕</button>
+        <h2 id="friends-list-title">YOUR NETWORK</h2>
+        <div class="loadout-hint" id="friends-list-summary">0 friends</div>
+        <div class="friends-list" id="friends-list-rows"></div>
+        <div class="loadout-actions">
+          <span></span>
+          <button class="start-btn" id="friends-list-add">+ ADD FRIEND</button>
         </div>
       </div>
     </div>
@@ -1074,6 +1156,10 @@
       <div class="leaderboard hidden" id="leaderboard">
         <div class="lb-header-row">
           <h4>TOP DEFENDERS</h4>
+          <select class="lb-sector-filter" id="lb-scope-filter" aria-label="Filter scope">
+            <option value="ALL">ALL</option>
+            <option value="FRIENDS">FRIENDS</option>
+          </select>
           <select class="lb-sector-filter" id="lb-sector-filter" aria-label="Filter by sector">
             <option value="">ALL SECTORS</option>
             <option value="FINANCE">FINANCE</option>
@@ -1276,6 +1362,8 @@ const GAME_URL = 'https://rb.gy/3s19b3';
 
 let cachedScores = [];
 let cachedPlayer = null;
+let cachedFriendIds = [];
+let cachedFriends = [];
 let titleCountdownTimer = null;
 
 const CANVAS_W = 640;
@@ -1569,14 +1657,22 @@ document.getElementById('dossier-close').addEventListener('click', closeDossier)
 dossierModal.addEventListener('click', onDossierBackdrop);
 window.addEventListener('keydown', onDossierEsc);
 
-document.getElementById('lb-sector-filter').addEventListener('change', async (e) => {
-  const raw = e.target.value;
+async function refreshGameOverLeaderboard() {
+  const scopeSel = document.getElementById('lb-scope-filter');
+  const sectorSel = document.getElementById('lb-sector-filter');
+  const scope = scopeSel?.value || 'ALL';
+  const raw = sectorSel?.value;
   const sec = ['FINANCE','HEALTHCARE','TECH','GOVT'].includes(raw) ? raw : null;
+  const friendIds = (scope === 'FRIENDS' && cachedPlayer?.id)
+    ? [cachedPlayer.id, ...cachedFriendIds]
+    : null;
   cachedScores = game.mode === 'daily'
-    ? await fetchDailyTopScores(game.dailyDateStr, sec)
-    : await fetchTopScores(sec);
+    ? await fetchDailyTopScores(game.dailyDateStr, sec, friendIds)
+    : await fetchTopScores(sec, friendIds);
   renderLeaderboard(cachedPlayer?.name);
-});
+}
+document.getElementById('lb-scope-filter').addEventListener('change', refreshGameOverLeaderboard);
+document.getElementById('lb-sector-filter').addEventListener('change', refreshGameOverLeaderboard);
 
 // Score system + sharing wiring
 document.getElementById('submit-name-btn').addEventListener('click', submitName);
@@ -1740,10 +1836,11 @@ async function sbGet(path) {
     return await r.json();
   } catch(e) { return []; }
 }
-async function sbPost(path, body) {
+async function sbPost(path, body, extraHeaders = {}) {
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method: 'POST', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(body) });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method: 'POST', headers: sbHeaders({ 'Prefer': 'return=representation', ...extraHeaders }), body: JSON.stringify(body) });
     if (!r.ok) return null;
+    if (r.status === 204 || r.headers.get('content-length') === '0') return [];
     return await r.json();
   } catch(e) { return null; }
 }
@@ -1751,10 +1848,19 @@ async function sbPatch(path, body) {
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method: 'PATCH', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(body) });
     if (!r.ok) return null;
+    if (r.status === 204 || r.headers.get('content-length') === '0') return [];
     return await r.json();
   } catch(e) { return null; }
 }
-
+async function sbDelete(path) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      method: 'DELETE',
+      headers: sbHeaders()
+    });
+    return r.ok;
+  } catch(e) { return false; }
+}
 function getPlayerToken() {
   let t = localStorage.getItem('id_defender_token_v1');
   if (!t) { t = crypto.randomUUID(); localStorage.setItem('id_defender_token_v1', t); }
@@ -1786,10 +1892,12 @@ function setSector(v) {
   if (tag) tag.textContent = currentSectorPick ? SECTORS[currentSectorPick].tagline : '';
 }
 
-async function fetchTopScores(sector = null) {
+async function fetchTopScores(sector = null, friendIds = null) {
+  if (Array.isArray(friendIds) && friendIds.length === 0) return [];
   let path = 'scores?select=player_id,name,score,wave,sector,players(streak_days,total_plays)'
     + '&game_mode=eq.free';
   if (sector) path += `&sector=eq.${encodeURIComponent(sector)}`;
+  if (Array.isArray(friendIds)) path += `&player_id=in.(${friendIds.join(',')})`;
   path += '&order=score.desc&limit=' + MAX_SCORES;
   const rows = await sbGet(path);
   return Array.isArray(rows) ? rows.map(r => ({
@@ -1800,11 +1908,13 @@ async function fetchTopScores(sector = null) {
   })) : [];
 }
 
-async function fetchDailyTopScores(dateStr, sector = null) {
+async function fetchDailyTopScores(dateStr, sector = null, friendIds = null) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return [];
+  if (Array.isArray(friendIds) && friendIds.length === 0) return [];
   let path = `daily_leaderboard?select=player_id,name,score,wave,sector,players(streak_days,total_plays)`
            + `&play_date=eq.${encodeURIComponent(dateStr)}`;
   if (sector) path += `&sector=eq.${encodeURIComponent(sector)}`;
+  if (Array.isArray(friendIds)) path += `&player_id=in.(${friendIds.join(',')})`;
   path += `&order=score.desc&limit=${MAX_SCORES}`;
   const rows = await sbGet(path);
   return Array.isArray(rows) ? rows.map(r => ({
@@ -1813,6 +1923,45 @@ async function fetchDailyTopScores(dateStr, sector = null) {
     streak_days: r.players?.streak_days || 0,
     total_plays: r.players?.total_plays || 0
   })) : [];
+}
+
+async function fetchPlayerByFriendCode(code) {
+  const rows = await sbGet(`players?friend_code=eq.${encodeURIComponent(code)}&select=id,name,current_rank,best_score,total_plays,streak_days,last_played_date&limit=1`);
+  return Array.isArray(rows) && rows.length ? rows[0] : null;
+}
+
+async function fetchMyFriendships(myPlayerId) {
+  if (!myPlayerId) return [];
+  const rows = await sbGet(`friendships?or=(player_id_a.eq.${myPlayerId},player_id_b.eq.${myPlayerId})&select=player_id_a,player_id_b,created_at&order=created_at.desc`);
+  return Array.isArray(rows) ? rows : [];
+}
+
+async function fetchFriendPlayers(friendIds) {
+  if (!friendIds || !friendIds.length) return [];
+  const rows = await sbGet(`players?id=in.(${friendIds.join(',')})&select=id,name,current_rank,best_score,total_plays,streak_days,last_played_date`);
+  return Array.isArray(rows) ? rows : [];
+}
+
+async function addFriend(myId, otherId) {
+  if (!myId || !otherId || myId === otherId) return false;
+  const [a, b] = myId < otherId ? [myId, otherId] : [otherId, myId];
+  await sbPost('friendships?on_conflict=player_id_a,player_id_b', { player_id_a: a, player_id_b: b }, { 'Prefer': 'resolution=ignore-duplicates,return=minimal' });
+  return true;
+}
+
+async function removeFriend(myId, otherId) {
+  if (!myId || !otherId) return false;
+  const [a, b] = myId < otherId ? [myId, otherId] : [otherId, myId];
+  return await sbDelete(`friendships?player_id_a=eq.${a}&player_id_b=eq.${b}`);
+}
+
+async function loadFriends() {
+  if (!cachedPlayer?.id) { cachedFriendIds = []; cachedFriends = []; return; }
+  const rows = await fetchMyFriendships(cachedPlayer.id);
+  const ids = rows.map(r => r.player_id_a === cachedPlayer.id ? r.player_id_b : r.player_id_a);
+  cachedFriendIds = ids;
+  cachedFriends = await fetchFriendPlayers(ids);
+  try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(ids)); } catch (e) {}
 }
 
 async function fetchPlayer(token) {
@@ -1911,6 +2060,14 @@ function computeBadges(player, globalRank, runStats) {
   return badges;
 }
 
+function renderTitleFriendCode() {
+  const line = document.getElementById('title-friend-code');
+  const val  = document.getElementById('title-friend-code-value');
+  if (!line || !val) return;
+  if (!cachedPlayer?.friend_code) { line.classList.add('hidden'); return; }
+  val.textContent = cachedPlayer.friend_code;
+  line.classList.remove('hidden');
+}
 function renderBadgeRow(badges) {
   const row = document.getElementById('badge-row');
   const rankBadge = computeDefenderRank(cachedPlayer);
@@ -1937,6 +2094,14 @@ function topScore() {
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+const FRIEND_CODE_RE = /^ID-[A-HJKMNP-Z2-9]{4}-[A-HJKMNP-Z2-9]{4}$/;
+const FRIENDS_KEY = 'id_defender_friends_v1';
+function isValidFriendCode(s) {
+  return typeof s === 'string' && FRIEND_CODE_RE.test(s.trim().toUpperCase());
+}
+function normalizeFriendCode(s) {
+  return String(s || '').trim().toUpperCase().replace(/\s+/g, '');
 }
 function streakIcon(streak) {
   if (streak >= 30) return '🔥🔥🔥';
@@ -4142,11 +4307,151 @@ async function saveLoadout() {
       await sbPatch(`players?token=eq.${encodeURIComponent(token)}`, { preferred_powerups: loadoutDraft });
       cachedPlayer.preferred_powerups = loadoutDraft.slice();
     } else {
-      await sbPost('players', { token, name: 'ANON', preferred_powerups: loadoutDraft, total_plays: 0, best_score: 0, streak_days: 0, last_played_date: null, kills_by_type: {}, current_rank: 'RECRUIT', threat_coverage_ever: false });
-      cachedPlayer = { token, preferred_powerups: loadoutDraft.slice() };
+      const rows = await sbPost('players', { token, name: 'ANON', preferred_powerups: loadoutDraft, total_plays: 0, best_score: 0, streak_days: 0, last_played_date: null, kills_by_type: {}, current_rank: 'RECRUIT', threat_coverage_ever: false });
+      if (Array.isArray(rows) && rows.length) cachedPlayer = rows[0];
+      else cachedPlayer = { token, preferred_powerups: loadoutDraft.slice() };
     }
   } catch (e) { }
   closeLoadout();
+}
+
+document.getElementById('title-friend-code-copy').addEventListener('click', async () => {
+  const code = cachedPlayer?.friend_code;
+  if (!code) return;
+  const btn = document.getElementById('title-friend-code-copy');
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(code);
+    else {
+      const ta = document.createElement('textarea');
+      ta.value = code; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+  } catch (e) { }
+});
+
+let addFriendCandidate = null;
+
+function openAddFriendModal() {
+  document.getElementById('add-friend-modal').classList.remove('hidden');
+  const input = document.getElementById('add-friend-input');
+  input.value = '';
+  input.focus();
+  document.getElementById('add-friend-err').textContent = '';
+  document.getElementById('add-friend-preview').classList.add('hidden');
+  document.getElementById('add-friend-lookup').disabled = true;
+  document.getElementById('add-friend-confirm').disabled = true;
+  addFriendCandidate = null;
+}
+function closeAddFriendModal() {
+  document.getElementById('add-friend-modal').classList.add('hidden');
+  addFriendCandidate = null;
+}
+function setAddFriendError(msg) {
+  document.getElementById('add-friend-err').textContent = msg || '';
+}
+function onAddFriendInput() {
+  const input = document.getElementById('add-friend-input');
+  const normalized = normalizeFriendCode(input.value);
+  if (input.value !== normalized) input.value = normalized;
+  const valid = isValidFriendCode(normalized);
+  document.getElementById('add-friend-lookup').disabled = !valid;
+  document.getElementById('add-friend-preview').classList.add('hidden');
+  document.getElementById('add-friend-confirm').disabled = true;
+  setAddFriendError('');
+  addFriendCandidate = null;
+}
+async function onAddFriendLookup() {
+  const code = normalizeFriendCode(document.getElementById('add-friend-input').value);
+  if (!isValidFriendCode(code)) return;
+  if (code === cachedPlayer?.friend_code) { setAddFriendError("That's your own code"); return; }
+  setAddFriendError('');
+  try {
+    const p = await fetchPlayerByFriendCode(code);
+    if (!p) { setAddFriendError('Code not recognized'); return; }
+    if (cachedFriendIds.includes(p.id)) {
+      setAddFriendError('Already in your network');
+      return;
+    }
+    addFriendCandidate = p;
+    const prev = document.getElementById('add-friend-preview');
+    prev.innerHTML = `
+      <div class="fc-preview-name">${escapeHtml(p.name || 'ANON')}</div>
+      <div class="fc-preview-meta">RANK · ${escapeHtml(p.current_rank || 'RECRUIT')} · BEST ${(p.best_score || 0).toLocaleString()} · ${p.total_plays || 0} plays</div>
+    `;
+    prev.classList.remove('hidden');
+    document.getElementById('add-friend-confirm').disabled = false;
+  } catch (e) {
+    setAddFriendError('Network error');
+  }
+}
+async function onAddFriendConfirm() {
+  if (!addFriendCandidate || !cachedPlayer?.id) return;
+  document.getElementById('add-friend-confirm').disabled = true;
+  try {
+    await addFriend(cachedPlayer.id, addFriendCandidate.id);
+    await loadFriends();
+    closeAddFriendModal();
+    openFriendsListModal();
+  } catch (e) {
+    setAddFriendError('Could not add — try again');
+    document.getElementById('add-friend-confirm').disabled = false;
+  }
+}
+
+function openFriendsListModal() {
+  renderFriendsList();
+  document.getElementById('friends-list-modal').classList.remove('hidden');
+  document.getElementById('friends-list-close').focus();
+}
+function closeFriendsListModal() {
+  document.getElementById('friends-list-modal').classList.add('hidden');
+}
+function renderFriendsList() {
+  const el = document.getElementById('friends-list-rows');
+  const sum = document.getElementById('friends-list-summary');
+  if (!el || !sum) return;
+  sum.textContent = `${cachedFriends.length} friend${cachedFriends.length === 1 ? '' : 's'}`;
+  if (!cachedFriends.length) {
+    el.innerHTML = '<div class="friends-empty">No friends yet. Add a code to start your network.</div>';
+    return;
+  }
+  el.innerHTML = cachedFriends.map(f => `
+    <div class="friend-row">
+      <div>
+        <div class="friend-row-name">${escapeHtml(f.name || 'ANON')}</div>
+        <div class="friend-row-meta">${escapeHtml(f.current_rank || 'RECRUIT')} · ${f.total_plays || 0} plays · last ${escapeHtml(f.last_played_date || 'never')}</div>
+      </div>
+      <div class="friend-row-best">${(f.best_score || 0).toLocaleString()}</div>
+      <button class="friend-row-remove" data-id="${f.id}">REMOVE</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.friend-row-remove').forEach(btn => {
+    btn.addEventListener('click', () => handleRemoveFriend(btn));
+  });
+}
+let _removeConfirmTimer = null;
+function handleRemoveFriend(btn) {
+  if (btn.classList.contains('confirming')) {
+    clearTimeout(_removeConfirmTimer);
+    const otherId = btn.getAttribute('data-id');
+    btn.disabled = true;
+    if (!cachedPlayer?.id) return;
+    removeFriend(cachedPlayer.id, otherId).then(async () => {
+      await loadFriends();
+      renderFriendsList();
+    });
+  } else {
+    btn.classList.add('confirming');
+    btn.textContent = 'CONFIRM REMOVE';
+    _removeConfirmTimer = setTimeout(() => {
+      btn.classList.remove('confirming');
+      btn.textContent = 'REMOVE';
+    }, 3000);
+  }
 }
 
 const loadoutBtn = document.getElementById('loadout-btn');
@@ -4157,6 +4462,25 @@ document.getElementById('loadout-save').addEventListener('click', saveLoadout);
 loadoutModal.addEventListener('click', e => { if (e.target === loadoutModal) closeLoadout(); });
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && !loadoutModal.classList.contains('hidden')) closeLoadout(); });
 
+const friendsBtn = document.getElementById('friends-btn');
+friendsBtn.addEventListener('click', openFriendsListModal);
+document.getElementById('friends-list-close').addEventListener('click', closeFriendsListModal);
+document.getElementById('friends-list-add').addEventListener('click', () => { closeFriendsListModal(); openAddFriendModal(); });
+document.getElementById('friends-list-modal').addEventListener('click', e => { if (e.target.id === 'friends-list-modal') closeFriendsListModal(); });
+
+document.getElementById('add-friend-close').addEventListener('click', closeAddFriendModal);
+document.getElementById('add-friend-modal').addEventListener('click', e => { if (e.target.id === 'add-friend-modal') closeAddFriendModal(); });
+document.getElementById('add-friend-input').addEventListener('input', onAddFriendInput);
+document.getElementById('add-friend-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !document.getElementById('add-friend-lookup').disabled) onAddFriendLookup(); });
+document.getElementById('add-friend-lookup').addEventListener('click', onAddFriendLookup);
+document.getElementById('add-friend-confirm').addEventListener('click', onAddFriendConfirm);
+
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!document.getElementById('friends-list-modal').classList.contains('hidden')) closeFriendsListModal();
+  if (!document.getElementById('add-friend-modal').classList.contains('hidden')) closeAddFriendModal();
+});
+
 // Kick off
 loop();
 
@@ -4164,10 +4488,12 @@ loop();
 fetchTopScores().then(s => { cachedScores = s; updateTitleBest(); }).catch(() => {});
 updateTitleWeekly();
 startLiveTicker();
-fetchPlayer(getPlayerToken()).then(p => {
+fetchPlayer(getPlayerToken()).then(async p => {
   if (!p) return;
   cachedPlayer = p;
   updateTitleRank();
+  renderTitleFriendCode();
+  await loadFriends();
   if (!titleScreen.classList.contains('hidden')) {
     startTitleCountdown();
   }
