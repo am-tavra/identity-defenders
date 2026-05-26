@@ -1900,8 +1900,10 @@ async function loadFriends() {
   try { localStorage.setItem(FRIENDS_KEY, JSON.stringify(ids)); } catch (e) {}
 }
 
+const PLAYER_SELECT = 'id,name,streak_days,last_played_date,best_score,total_plays,kills_by_type,preferred_powerups,current_rank,threat_coverage_ever,friend_code';
+
 async function fetchPlayer(token) {
-  const rows = await sbGet(`players?token=eq.${encodeURIComponent(token)}&limit=1`);
+  const rows = await sbGet(`players?token=eq.${encodeURIComponent(token)}&select=${PLAYER_SELECT}&limit=1`);
   return Array.isArray(rows) && rows.length ? rows[0] : null;
 }
 
@@ -1929,11 +1931,11 @@ async function upsertPlayer(token, name, score) {
   const projected = { ...(existing || {}), ...payload };
   payload.current_rank = computeDefenderRank(projected).key;
   if (existing) {
-    const rows = await sbPatch(`players?token=eq.${encodeURIComponent(token)}`, payload);
+    const rows = await sbPatch(`players?token=eq.${encodeURIComponent(token)}&select=${PLAYER_SELECT}`, payload);
     return Array.isArray(rows) && rows.length ? rows[0] : { ...existing, ...payload };
   } else {
-    const rows = await sbPost('players', { token, ...payload });
-    return Array.isArray(rows) && rows.length ? rows[0] : { token, ...payload };
+    const rows = await sbPost(`players?select=${PLAYER_SELECT}`, { token, ...payload });
+    return Array.isArray(rows) && rows.length ? rows[0] : { ...payload };
   }
 }
 
@@ -4238,7 +4240,7 @@ async function saveLoadout() {
   if (loadoutDraft.length !== 2) return;
   const token = getPlayerToken();
   try {
-    if (cachedPlayer && cachedPlayer.token === token) {
+    if (cachedPlayer && cachedPlayer.id) {
       await sbPatch(`players?token=eq.${encodeURIComponent(token)}`, { preferred_powerups: loadoutDraft });
       cachedPlayer.preferred_powerups = loadoutDraft.slice();
     } else {
