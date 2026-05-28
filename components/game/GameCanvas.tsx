@@ -75,6 +75,14 @@ export default function GameCanvas() {
         onLegendToggle={() => setLegendVisible(v => !v)}
         legendVisible={legendVisible}
       />
+      {competition && (
+        <CompetitionBanner
+          competition={competition}
+          playerId={playerId}
+          isEntered={isEntered}
+          onEntered={refreshCompetition}
+        />
+      )}
       <div className="game-area">
         <div className="gamewrap">
           <canvas ref={canvasRef} id="game" width={640} height={720} />
@@ -82,19 +90,7 @@ export default function GameCanvas() {
           <PowerupTray activePU={activePU} />
 
           {gameState === 'title' && (
-            <>
-              <TitleScreen topScore={topScore} onStart={startGame} />
-              {competition && (
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
-                  <CompetitionBanner
-                    competition={competition}
-                    playerId={playerId}
-                    isEntered={isEntered}
-                    onEntered={refreshCompetition}
-                  />
-                </div>
-              )}
-            </>
+            <TitleScreen topScore={topScore} onStart={startGame} />
           )}
           {gameState === 'gameover' && (
             <GameOver
