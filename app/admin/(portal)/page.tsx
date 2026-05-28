@@ -40,9 +40,9 @@ async function getStats() {
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div className="bg-[#0d1230] border border-white/10 rounded-xl p-5">
-      <p className="text-xs text-[#8A9AC8] font-mono tracking-wider mb-2">{label}</p>
+      <p className="text-[10px] text-[#8A9AC8] font-press tracking-wider mb-3">{label}</p>
       <p className="text-3xl font-bold text-[#FFC857] font-mono">{value?.toLocaleString() ?? '—'}</p>
-      {sub && <p className="text-xs text-[#8A9AC8] font-mono mt-1">{sub}</p>}
+      {sub && <p className="text-[10px] text-[#8A9AC8] font-mono mt-1">{sub}</p>}
     </div>
   )
 }
@@ -53,8 +53,8 @@ export default async function AdminDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-lg font-mono font-bold text-white tracking-wide">DASHBOARD</h1>
-        <p className="text-xs text-[#8A9AC8] font-mono mt-1">Identity Defender · Live metrics</p>
+        <h1 className="text-base font-press text-white tracking-wide">DASHBOARD</h1>
+        <p className="text-[10px] text-[#8A9AC8] font-mono mt-2">Identity Defender · Live metrics</p>
       </div>
 
       {/* Stats grid */}
@@ -72,16 +72,16 @@ export default async function AdminDashboard() {
       {/* Active competition */}
       {activeComp && (
         <div className="bg-[#0d1230] border border-[#FFC857]/20 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-mono font-bold text-[#FFC857]">🏆 {activeComp.name}</h2>
-            <Link href="/admin/competitions" className="text-xs font-mono text-[#8A9AC8] hover:text-white">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-press text-[#FFC857] tracking-wider">🏆 {activeComp.name}</h2>
+            <Link href="/admin/competitions" className="text-[10px] font-press tracking-wider text-[#8A9AC8] hover:text-white">
               MANAGE →
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs font-mono">
-            <div><span className="text-[#8A9AC8]">PRIZE: </span><span className="text-white">{activeComp.prize_description || '—'}</span></div>
-            <div><span className="text-[#8A9AC8]">ENDS: </span><span className="text-white">{new Date(activeComp.ends_at).toLocaleDateString()}</span></div>
-            <div><span className="text-[#8A9AC8]">ENTRANTS: </span><span className="text-white">{entrantCount}</span></div>
+            <div><span className="text-[#8A9AC8] text-[10px] font-press tracking-wider">PRIZE: </span><span className="text-white">{activeComp.prize_description || '—'}</span></div>
+            <div><span className="text-[#8A9AC8] text-[10px] font-press tracking-wider">ENDS: </span><span className="text-white">{new Date(activeComp.ends_at).toLocaleDateString()}</span></div>
+            <div><span className="text-[#8A9AC8] text-[10px] font-press tracking-wider">ENTRANTS: </span><span className="text-white">{entrantCount}</span></div>
           </div>
         </div>
       )}
@@ -89,15 +89,15 @@ export default async function AdminDashboard() {
       {/* Recent scores */}
       <div className="bg-[#0d1230] border border-white/10 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/10">
-          <h2 className="text-sm font-mono font-bold text-white">RECENT SCORES</h2>
+          <h2 className="text-xs font-press text-white tracking-wider">RECENT SCORES</h2>
         </div>
         <table className="w-full text-xs font-mono">
           <thead>
             <tr className="border-b border-white/5">
-              <th className="text-left px-5 py-2 text-[#8A9AC8]">HANDLE</th>
-              <th className="text-right px-5 py-2 text-[#8A9AC8]">SCORE</th>
-              <th className="text-right px-5 py-2 text-[#8A9AC8]">QTR</th>
-              <th className="text-right px-5 py-2 text-[#8A9AC8]">TIME</th>
+              <th className="text-left px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">HANDLE</th>
+              <th className="text-right px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">SCORE</th>
+              <th className="text-right px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">QTR</th>
+              <th className="text-right px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">TIME</th>
             </tr>
           </thead>
           <tbody>

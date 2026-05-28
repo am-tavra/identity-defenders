@@ -15,12 +15,12 @@ export default async function PlayersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-mono font-bold text-white">PLAYERS</h1>
-          <p className="text-xs text-[#8A9AC8] font-mono mt-1">Top 100 by score · {players?.length ?? 0} shown</p>
+          <h1 className="text-base font-press text-white tracking-wide">PLAYERS</h1>
+          <p className="text-[10px] text-[#8A9AC8] font-mono mt-2">Top 100 by score · {players?.length ?? 0} shown</p>
         </div>
         <a
           href="/api/admin/players/export"
-          className="text-xs font-mono text-[#FFC857] border border-[#FFC857]/30 px-3 py-1.5 rounded-lg hover:bg-[#FFC857]/10 transition-colors"
+          className="text-[10px] font-press tracking-wider text-[#FFC857] border border-[#FFC857]/30 px-3 py-2 rounded-lg hover:bg-[#FFC857]/10 transition-colors"
         >
           ↓ EXPORT CSV
         </a>
@@ -30,12 +30,12 @@ export default async function PlayersPage() {
         <table className="w-full text-xs font-mono">
           <thead>
             <tr className="border-b border-white/5">
-              <th className="text-left px-5 py-3 text-[#8A9AC8]">HANDLE / NAME</th>
-              <th className="text-left px-5 py-3 text-[#8A9AC8]">EMAIL</th>
-              <th className="text-right px-5 py-3 text-[#8A9AC8]">BEST SCORE</th>
-              <th className="text-right px-5 py-3 text-[#8A9AC8]">STREAK</th>
-              <th className="text-right px-5 py-3 text-[#8A9AC8]">PLAYS</th>
-              <th className="text-right px-5 py-3 text-[#8A9AC8]">LAST PLAYED</th>
+              <th className="text-left px-5 py-3 text-[#8A9AC8] text-[10px] font-press tracking-wider">HANDLE / NAME</th>
+              <th className="text-left px-5 py-3 text-[#8A9AC8] text-[10px] font-press tracking-wider">EMAIL</th>
+              <th className="text-right px-5 py-3 text-[#8A9AC8] text-[10px] font-press tracking-wider">BEST SCORE</th>
+              <th className="text-right px-5 py-3 text-[#8A9AC8] text-[10px] font-press tracking-wider">STREAK</th>
+              <th className="text-right px-5 py-3 text-[#8A9AC8] text-[10px] font-press tracking-wider">PLAYS</th>
+              <th className="text-right px-5 py-3 text-[#8A9AC8] text-[10px] font-press tracking-wider">LAST PLAYED</th>
             </tr>
           </thead>
           <tbody>

@@ -25,12 +25,12 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-[#07091a] p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <p className="text-xs text-[#8A9AC8] font-mono tracking-widest mb-2">IDENTITY DEFENDER</p>
-          <h1 className="text-xl font-bold text-[#FFC857] font-mono tracking-wide">ADMIN PORTAL</h1>
+          <p className="text-[10px] text-[#8A9AC8] font-press tracking-widest mb-3">IDENTITY DEFENDER</p>
+          <h1 className="text-base text-[#FFC857] font-press tracking-wide">ADMIN PORTAL</h1>
         </div>
         <form onSubmit={handleSubmit} className="bg-[#0d1230] border border-white/10 rounded-xl p-6 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8A9AC8] font-mono tracking-wider">EMAIL</label>
+            <label className="text-[10px] text-[#8A9AC8] font-press tracking-wider">EMAIL</label>
             <input
               type="email"
               value={email}
@@ -40,7 +40,7 @@ export default function AdminLogin() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-[#8A9AC8] font-mono tracking-wider">PASSWORD</label>
+            <label className="text-[10px] text-[#8A9AC8] font-press tracking-wider">PASSWORD</label>
             <input
               type="password"
               value={password}
@@ -53,7 +53,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#FF6B4A] to-[#E94A88] text-white font-mono text-xs tracking-widest py-2.5 rounded-lg disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="w-full bg-gradient-to-r from-[#FF6B4A] to-[#E94A88] text-white font-press text-[11px] tracking-widest py-3 rounded-lg disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             {loading ? 'SIGNING IN…' : 'SIGN IN'}
           </button>

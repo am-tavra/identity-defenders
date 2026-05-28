@@ -27,8 +27,8 @@ export default async function CompetitionsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-mono font-bold text-white">COMPETITIONS</h1>
-          <p className="text-xs text-[#8A9AC8] font-mono mt-1">Create and manage competitions</p>
+          <h1 className="text-base font-press text-white tracking-wide">COMPETITIONS</h1>
+          <p className="text-[10px] text-[#8A9AC8] font-mono mt-2">Create and manage competitions</p>
         </div>
       </div>
 
@@ -38,7 +38,7 @@ export default async function CompetitionsPage() {
       {/* Competition list */}
       <div className="bg-[#0d1230] border border-white/10 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/10">
-          <h2 className="text-sm font-mono font-bold text-white">ALL COMPETITIONS</h2>
+          <h2 className="text-xs font-press text-white tracking-wider">ALL COMPETITIONS</h2>
         </div>
         {!competitions?.length ? (
           <p className="px-5 py-8 text-xs text-[#8A9AC8] font-mono text-center">No competitions yet.</p>
@@ -46,11 +46,11 @@ export default async function CompetitionsPage() {
           <table className="w-full text-xs font-mono">
             <thead>
               <tr className="border-b border-white/5">
-                <th className="text-left px-5 py-2 text-[#8A9AC8]">NAME</th>
-                <th className="text-left px-5 py-2 text-[#8A9AC8]">STATUS</th>
-                <th className="text-right px-5 py-2 text-[#8A9AC8]">ENTRANTS</th>
-                <th className="text-right px-5 py-2 text-[#8A9AC8]">ENDS</th>
-                <th className="text-right px-5 py-2 text-[#8A9AC8]">ACTIONS</th>
+                <th className="text-left px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">NAME</th>
+                <th className="text-left px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">STATUS</th>
+                <th className="text-right px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">ENTRANTS</th>
+                <th className="text-right px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">ENDS</th>
+                <th className="text-right px-5 py-2 text-[#8A9AC8] text-[10px] font-press tracking-wider">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -67,7 +67,7 @@ export default async function CompetitionsPage() {
                       )}
                     </td>
                     <td className="px-5 py-3">
-                      <span className={`${statusColor} font-bold`}>{status}</span>
+                      <span className={`${statusColor} text-[10px] font-press tracking-wider`}>{status}</span>
                     </td>
                     <td className="px-5 py-3 text-right text-white">{counts[comp.id] ?? 0}</td>
                     <td className="px-5 py-3 text-right text-[#8A9AC8]">
@@ -76,7 +76,7 @@ export default async function CompetitionsPage() {
                     <td className="px-5 py-3 text-right">
                       <Link
                         href={`/admin/competitions/${comp.id}`}
-                        className="text-[#FFC857] hover:underline"
+                        className="text-[#FFC857] text-[10px] font-press tracking-wider hover:underline"
                       >
                         VIEW →
                       </Link>
