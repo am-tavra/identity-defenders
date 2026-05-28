@@ -374,15 +374,16 @@ canvas {
 
 /* ── Competition modal ── */
 .comp-modal-overlay {
-  position: absolute; inset: 0; z-index: 20;
-  background: rgba(7,9,26,0.88); backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center; padding: 20px;
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(7,9,26,0.92); backdrop-filter: blur(4px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 40px 16px; overflow-y: auto;
 }
 .comp-modal {
   background: linear-gradient(180deg, #141b3d 0%, #0a0f24 100%);
   border: 1px solid rgba(255,200,87,0.3);
   border-radius: 10px; padding: 28px 28px 24px; max-width: 420px; width: 100%;
-  text-align: center;
+  text-align: center; margin: auto;
 }
 .comp-modal-title {
   font-family: 'Press Start 2P', monospace; font-size: 13px; color: var(--accent-1);

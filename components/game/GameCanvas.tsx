@@ -85,7 +85,7 @@ export default function GameCanvas() {
             <>
               <TitleScreen topScore={topScore} onStart={startGame} />
               {competition && (
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10 }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
                   <CompetitionBanner
                     competition={competition}
                     playerId={playerId}
