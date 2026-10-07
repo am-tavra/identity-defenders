@@ -513,6 +513,7 @@ export function checkWaveComplete(game: GameObj, cb: UICallbacks) {
 }
 
 function advanceWave(game: GameObj, cb: UICallbacks) {
+  cb.onQuarterComplete?.(game.wave, game.score, game.lives)
   game.state = 'transition'; game.transitionTimer = 120; game.wave++
   cb.onAlert(`QUARTER ${game.wave} INCOMING`)
   game.score += game.lives * 100

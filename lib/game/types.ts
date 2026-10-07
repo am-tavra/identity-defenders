@@ -102,4 +102,13 @@ export interface UICallbacks {
   onAlert: (text: string, ms?: number) => void
   onPUChange: (activePU: Record<string, ActivePowerup>) => void
   onGameOver: (score: number, wave: number) => void
+  // fired by the engine when a quarter is cleared, before the next one starts
+  onQuarterComplete?: (wave: number, score: number, lives: number) => void
+}
+
+export interface GameResult {
+  score: number
+  wave: number
+  // server-issued id for this game; the score submission must reference it
+  sessionId: string | null
 }

@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient, hasServerBackend } from '@/lib/supabase/server'
 import { getBaseUrl, ogImageUrl } from '@/lib/url'
 import ReferralTracker from './ReferralTracker'
 import '../../../app/game.css'
@@ -10,6 +10,7 @@ interface Props {
 }
 
 async function getScoreData(scoreId: string) {
+  if (!hasServerBackend) return null
   const sb = createServiceClient()
 
   const { data: score } = await sb

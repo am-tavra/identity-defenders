@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient, hasServerBackend } from '@/lib/supabase/server'
 import { getBaseUrl } from '@/lib/url'
 import CountdownTimer from './CountdownTimer'
 import type { Competition, CompetitionLeaderboardRow } from '@/lib/game/types'
@@ -24,18 +24,19 @@ function DeltaBadge({ delta, isNew }: { delta: number | null; isNew: boolean }) 
 }
 
 export default async function LeaderboardPage() {
-  const sb = createServiceClient()
+  // without a backend (local play, or a build before Supabase is set up) the page still renders
+  const sb = hasServerBackend ? createServiceClient() : null
 
-  const { data: comp } = await sb
+  const { data: comp } = sb ? await sb
     .from('competitions')
     .select('*')
     .eq('active', true)
     .limit(1)
-    .single() as { data: Competition | null }
+    .maybeSingle() as { data: Competition | null } : { data: null }
 
   let rows: CompetitionLeaderboardRow[] = []
 
-  if (comp) {
+  if (sb && comp) {
     const { data: lb } = await sb
       .from('competition_leaderboard')
       .select('*')

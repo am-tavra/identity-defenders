@@ -4,7 +4,7 @@ export function getBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
-export function shareUrl(scoreId: number): string {
+export function shareUrl(scoreId: string): string {
   const base = typeof window !== 'undefined' ? window.location.origin : getBaseUrl()
   return `${base}/s/${scoreId}`
 }
@@ -14,10 +14,13 @@ export function ogImageUrl(params: Record<string, string>): string {
   return `${getBaseUrl()}/api/og?${query}`
 }
 
-export function getReferredByScoreId(): number | null {
+// Score ids are uuids; anything else in storage is ignored
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function getReferredByScoreId(): string | null {
   try {
     const val = sessionStorage.getItem('referredByScoreId')
-    return val ? parseInt(val, 10) : null
+    return val && UUID.test(val) ? val : null
   } catch {
     return null
   }

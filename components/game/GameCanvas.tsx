@@ -11,8 +11,8 @@ import CompetitionBanner from './CompetitionBanner'
 import TitleScreen from './screens/TitleScreen'
 import PauseScreen from './screens/PauseScreen'
 import GameOver from './screens/GameOver'
-import { fetchTopScores, fetchPlayer, getPlayerToken } from '@/hooks/useLeaderboard'
-import type { GameState, ActivePowerup } from '@/lib/game/types'
+import { fetchTopScores, fetchPlayer, track } from '@/hooks/useLeaderboard'
+import type { GameState, ActivePowerup, GameResult } from '@/lib/game/types'
 
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -25,8 +25,7 @@ export default function GameCanvas() {
   const [topScore, setTopScore] = useState(0)
   const [legendVisible, setLegendVisible] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [gameOverScore, setGameOverScore] = useState(0)
-  const [gameOverWave, setGameOverWave] = useState(1)
+  const [result, setResult] = useState<GameResult | null>(null)
   const [playerId, setPlayerId] = useState<string | null>(null)
 
   const [alertHandle, alertNode] = useAlert()
@@ -45,8 +44,8 @@ export default function GameCanvas() {
     }, []),
     onAlert: useCallback((text: string, ms?: number) => alertHandle.show(text, ms), [alertHandle]),
     onPUChange: useCallback((pu: Record<string, ActivePowerup>) => setActivePU({ ...pu }), []),
-    onGameOver: useCallback((s: number, w: number) => {
-      setGameOverScore(s); setGameOverWave(w); setGameState('gameover')
+    onGameOver: useCallback((r: GameResult) => {
+      setResult(r); setGameState('gameover')
       refreshCompetition()
     }, [refreshCompetition]),
   }
@@ -56,8 +55,8 @@ export default function GameCanvas() {
   useEffect(() => {
     fetchTopScores().then(list => { if (list.length) setTopScore(list[0].score) })
     // Load player ID for competition checks
-    const token = getPlayerToken()
-    fetchPlayer(token).then(p => { if (p) setPlayerId(p.id) })
+    fetchPlayer().then(p => { if (p) setPlayerId(p.id) })
+    track('page_view', { referrer: document.referrer ? new URL(document.referrer).hostname : null, mobile: window.matchMedia('(pointer: coarse)').matches })
   }, [])
 
   const handleTouchKey = useCallback((key: string, down: boolean) => setKey(key, down), [setKey])
@@ -92,10 +91,9 @@ export default function GameCanvas() {
           {gameState === 'title' && (
             <TitleScreen topScore={topScore} onStart={startGame} />
           )}
-          {gameState === 'gameover' && (
+          {gameState === 'gameover' && result && (
             <GameOver
-              score={gameOverScore}
-              wave={gameOverWave}
+              result={result}
               onRestart={startGame}
               competition={competition}
               competitionLeaderboard={leaderboard}

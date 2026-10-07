@@ -238,6 +238,7 @@ canvas {
 /* ── Game over screen ── */
 .gameover-title { font-family: 'Press Start 2P', monospace; font-size: 20px; color: var(--red); text-shadow: 0 0 16px rgba(255,112,67,0.5); line-height: 1.4; }
 .gameover-sub { font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--dim); }
+.save-error { font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--accent-2); line-height: 1.8; max-width: 46ch; }
 .final-score { font-family: 'Press Start 2P', monospace; font-size: 13px; color: var(--accent-1); }
 .final-wave { font-family: 'Press Start 2P', monospace; font-size: 10px; color: var(--accent-2); }
 .new-record-badge {
