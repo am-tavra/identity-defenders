@@ -47,12 +47,27 @@ export async function findPlayer(token: string) {
   return data
 }
 
-// Pass `req` to stamp the event with the visitor's approximate location (props.geo).
+// Anonymous id shared across *.threatarcade.com (set by proxy.ts). Lets the arcade admin join play across games.
+export const ARCADE_COOKIE = 'arcade_id'
+export function arcadeOf(req: NextRequest): string | null {
+  const v = req.cookies.get(ARCADE_COOKIE)?.value ?? ''
+  return UUID.test(v) ? v : null
+}
+
+// Pass `req` to stamp the event with the visitor's arcade id (props.arcade) and, on the two
+// entry events, their approximate location (props.geo).
+const GEO_EVENTS = new Set(['page_view', 'game_start'])
 export async function logEvent(
   name: string, token: string | null, sessionId: string | null, props: Record<string, unknown> = {}, req?: NextRequest,
 ) {
-  const geo = req ? geoOf(req) : null
-  await db().from('events').insert({ name, player_token: token, session_id: sessionId, props: geo ? { ...props, geo } : props })
+  const stamped: Record<string, unknown> = { ...props }
+  if (req) {
+    const arcade = arcadeOf(req)
+    if (arcade) stamped.arcade = arcade
+    const geo = GEO_EVENTS.has(name) ? geoOf(req) : null
+    if (geo) stamped.geo = geo
+  }
+  await db().from('events').insert({ name, player_token: token, session_id: sessionId, props: stamped })
 }
 
 // Fields safe to send back to the browser

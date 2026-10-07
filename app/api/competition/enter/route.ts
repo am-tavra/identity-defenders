@@ -29,6 +29,6 @@ export async function POST(req: NextRequest) {
     first_name: firstName, last_name: lastName, email, linkedin_url: linkedin || null,
   })
   if (error) return bad(error.code === '23505' ? 'you are already entered' : 'could not enter', error.code === '23505' ? 409 : 500)
-  await logEvent('competition_entry', token, null, { competitionId })
+  await logEvent('competition_entry', token, null, { competitionId }, req)
   return NextResponse.json({ ok: true })
 }

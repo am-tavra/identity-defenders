@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const sessionId = String(body?.sessionId ?? '')
   const props = body?.props && typeof body.props === 'object' ? { ...body.props as Record<string, unknown> } : {}
   if (JSON.stringify(props).length > 1000) return new Response(null, { status: 413 })
-  delete props.geo  // location comes from the server only
-  await logEvent(name, UUID.test(token) ? token : null, UUID.test(sessionId) ? sessionId : null, props, name === 'page_view' ? req : undefined)
+  delete props.geo; delete props.arcade  // location and arcade id come from the server only
+  await logEvent(name, UUID.test(token) ? token : null, UUID.test(sessionId) ? sessionId : null, props, req)
   return new Response(null, { status: 204 })
 }

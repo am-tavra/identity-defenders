@@ -61,10 +61,10 @@ export async function POST(req: NextRequest) {
   if (sErr || !row) return bad('could not save score', 500)
 
   await sb.from('game_sessions').update({ submitted_at: new Date().toISOString(), score_id: row.id }).eq('id', sessionId)
-  await logEvent('score_saved', token, sessionId, { score, quarter, name, firstSave: !existing })
+  await logEvent('score_saved', token, sessionId, { score, quarter, name, firstSave: !existing }, req)
   if (email) {
     await sb.from('leads').insert({ player_id: player.id, email, source: 'score_save' })
-    await logEvent('email_captured', token, sessionId)
+    await logEvent('email_captured', token, sessionId, {}, req)
   }
   return NextResponse.json({ scoreId: String(row.id), player: publicPlayer(player) })
 }
