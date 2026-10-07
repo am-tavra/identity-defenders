@@ -1,17 +1,15 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import {
-  fetchTopScores, fetchPlayer, upsertPlayer, insertScore, insertLead, getPlayerToken,
-} from '@/hooks/useLeaderboard'
+import { fetchTopScores, fetchPlayer, submitScore, track } from '@/hooks/useLeaderboard'
 import { generateShareCard, downloadShareCard } from '@/lib/game/shareCard'
 import { shareUrl as buildShareUrl, getReferredByScoreId, clearReferral } from '@/lib/url'
 import CompetitionTab from '../CompetitionTab'
-import type { CachedScore, CachedPlayer, Badge, Competition, CompetitionLeaderboardRow } from '@/lib/game/types'
-import { DISPLAY_COUNT, MAX_SCORES } from '@/lib/game/constants'
+import type { CachedScore, CachedPlayer, Badge, Competition, CompetitionLeaderboardRow, GameResult } from '@/lib/game/types'
+import { hasBackend } from '@/lib/supabase/client'
+import { DISPLAY_COUNT } from '@/lib/game/constants'
 
 interface GameOverProps {
-  score: number
-  wave: number
+  result: GameResult
   onRestart: () => void
   competition?: Competition | null
   competitionLeaderboard?: CompetitionLeaderboardRow[]
@@ -47,17 +45,13 @@ function rankIcon(rank: number) {
   if (rank <= 3) return '⭐'
   return ''
 }
-function isHighScore(s: number, list: CachedScore[]) {
-  if (s <= 0) return false
-  if (list.length < MAX_SCORES) return true
-  return s > list[list.length - 1].score
-}
 
 export default function GameOver({
-  score, wave, onRestart,
+  result, onRestart,
   competition, competitionLeaderboard = [], myCompetitionRow = null,
   playerId, isEnteredInCompetition = false,
 }: GameOverProps) {
+  const { score, wave, sessionId } = result
   const showCompTab = !!competition && isEnteredInCompetition
   const [activeTab, setActiveTab] = useState<'global' | 'competition'>(
     showCompTab ? 'competition' : 'global'
@@ -69,9 +63,11 @@ export default function GameOver({
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [isTopScore, setIsTopScore] = useState(false)
   const [cardCanvas, setCardCanvas] = useState<HTMLCanvasElement | null>(null)
-  const [scoreId, setScoreId] = useState<number | null>(null)
+  const [scoreId, setScoreId] = useState<string | null>(null)
   const [downloadLabel, setDownloadLabel] = useState('⬇️ DOWNLOAD CARD')
   const [linkedInLabel, setLinkedInLabel] = useState('in SHARE')
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const cardPreviewRef = useRef<HTMLDivElement>(null)
@@ -79,73 +75,80 @@ export default function GameOver({
   // Per-score share URL — falls back to origin until score is submitted
   const currentShareUrl = scoreId ? buildShareUrl(scoreId) : (typeof window !== 'undefined' ? window.location.origin : '')
 
+  // Returning players (who already have a handle) are saved automatically; new players pick one.
   useEffect(() => {
     async function load() {
       const list = await fetchTopScores()
       setScores(list)
-      setIsTopScore(list.length === 0 || score > list[0].score)
-      const token = getPlayerToken()
-      const existing = await fetchPlayer(token)
-      if (existing) {
-        setPlayer(existing)
-        const preRank = list.findIndex(s => s.score <= existing.best_score) + 1 || 99
-        setBadges(computeBadges(existing, preRank))
-      }
-      if (isHighScore(score, list)) {
+      setIsTopScore(hasBackend && score > 0 && (list.length === 0 || score > list[0].score))
+      const existing = await fetchPlayer()
+      if (existing) setPlayer(existing)
+      if (score <= 0 || !hasBackend) {
+        setShowLeaderboard(hasBackend)
+        showCard(score, wave, existing, list, null)
+      } else if (existing?.name) {
+        save(existing.name, '')
+      } else {
         setShowNameEntry(true)
         setTimeout(() => nameRef.current?.focus(), 100)
-        if (existing?.name && nameRef.current) nameRef.current.value = existing.name
-      } else {
-        setShowLeaderboard(true)
-        showCard(score, wave, existing, list, null)
       }
     }
     load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [score, wave])
 
-  async function showCard(s: number, w: number, p: CachedPlayer | null, list: CachedScore[], sid: number | null) {
+  async function showCard(s: number, w: number, p: CachedPlayer | null, list: CachedScore[], sid: string | null) {
     const url = sid ? buildShareUrl(sid) : (typeof window !== 'undefined' ? window.location.origin : '')
     const card = await generateShareCard(s, w, url, p, list)
     setCardCanvas(card)
-    if (cardPreviewRef.current) {
-      cardPreviewRef.current.innerHTML = ''
-      cardPreviewRef.current.appendChild(card)
-    }
   }
+  // the preview container only exists once there is a card, so attach after that render
+  useEffect(() => {
+    const el = cardPreviewRef.current
+    if (el && cardCanvas) { el.innerHTML = ''; el.appendChild(cardCanvas) }
+  }, [cardCanvas])
 
-  async function handleSubmit() {
-    const rawName = nameRef.current?.value || ''
+  async function save(rawName: string, email: string) {
     const name = ((rawName.trim() || 'ANON').toUpperCase().replace(/\s+/g, ' ').trim().substring(0, 12)) || 'ANON'
-    const email = emailRef.current?.value?.trim() || ''
+    setSaving(true)
+    setSaveError('')
+    const res = await submitScore({ sessionId, name, score, quarter: wave, email, referredBy: getReferredByScoreId() })
+    setSaving(false)
+    if (!res.ok) {
+      setSaveError(res.error)
+      setShowNameEntry(false)
+      setShowLeaderboard(true)
+      const list = await fetchTopScores()
+      await showCard(score, wave, player, list, null)
+      return
+    }
     setShowNameEntry(false)
-
-    const token = getPlayerToken()
-    const referredBy = getReferredByScoreId()
-
-    const updatedPlayer = await upsertPlayer(token, name, score)
-    setPlayer(updatedPlayer)
-
-    const newScoreId = await insertScore(updatedPlayer.id, name, score, wave, referredBy)
-    if (newScoreId) { setScoreId(newScoreId); clearReferral() }
-
-    if (email) await insertLead(updatedPlayer.id, email)
+    setScoreId(res.scoreId)
+    clearReferral()
+    setPlayer(res.player)
     const list = await fetchTopScores()
     setScores(list)
     const globalRank = list.findIndex(s => s.name === name && s.score === score) + 1 || 99
-    setBadges(computeBadges(updatedPlayer, globalRank))
+    setBadges(computeBadges(res.player, globalRank))
     setShowLeaderboard(true)
-    await showCard(score, wave, updatedPlayer, list, newScoreId)
+    await showCard(score, wave, res.player, list, res.scoreId)
   }
 
+  function handleSubmit() {
+    save(nameRef.current?.value || '', emailRef.current?.value?.trim() || '')
+  }
+
+  const shareBase = `I protected ${score.toLocaleString()} Identities in Identity Defender, reaching Quarter ${wave}! 🛡️ Hackers don't hack in — they log in. How many can you defend?`
+
   function shareToX() {
-    const base = `I protected ${score.toLocaleString()} Identities in Identity Defender, reaching Quarter ${wave}! 🛡️ Hackers don't hack in — they log in. How many can you defend?`
-    const text = encodeURIComponent(currentShareUrl ? `${base} ${currentShareUrl}` : base)
+    track('share', { channel: 'x' }, sessionId)
+    const text = encodeURIComponent(currentShareUrl ? `${shareBase} ${currentShareUrl}` : shareBase)
     window.open(`https://x.com/intent/post?text=${text}`, '_blank', 'noopener')
   }
 
   function shareToLinkedIn() {
-    const base = `I protected ${score.toLocaleString()} Identities in Identity Defender, reaching Quarter ${wave}! 🛡️ Hackers don't hack in — they log in. How many can you defend?`
-    const text = currentShareUrl ? `${base} ${currentShareUrl}` : base
+    track('share', { channel: 'linkedin' }, sessionId)
+    const text = currentShareUrl ? `${shareBase} ${currentShareUrl}` : shareBase
     if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(() => {})
     setLinkedInLabel('✓ TEXT COPIED · PASTE IN LI')
     setTimeout(() => setLinkedInLabel('in SHARE'), 2400)
@@ -155,6 +158,7 @@ export default function GameOver({
 
   async function handleDownload() {
     if (!cardCanvas) return
+    track('share', { channel: 'download' }, sessionId)
     setDownloadLabel('⬇️ SAVING…')
     await downloadShareCard(cardCanvas, score)
     setTimeout(() => setDownloadLabel('✓ SAVED'), 100)
@@ -169,6 +173,11 @@ export default function GameOver({
       <div className="final-score">IDs PROTECTED: <span>{score.toLocaleString()}</span></div>
       <div className="final-wave">REACHED QTR <span>{wave}</span></div>
 
+      {!hasBackend && <div className="gameover-sub">NO LEADERBOARD CONNECTED · SCORE NOT SAVED</div>}
+      {saving && !showNameEntry && <div className="gameover-sub">SAVING YOUR SCORE…</div>}
+      {saveError && <div className="save-error" role="alert">SCORE NOT SAVED: {saveError}</div>}
+      {scoreId && !showNameEntry && <div className="gameover-sub">SCORE SAVED{player?.name ? ` AS ${player.name}` : ''}</div>}
+
       {badges.length > 0 && (
         <div className="badge-row">
           {badges.map(b => <span key={b.cls} className={`badge ${b.cls}`}>{b.label}</span>)}
@@ -180,7 +189,7 @@ export default function GameOver({
           <label>ENTER YOUR HANDLE</label>
           <div className="name-entry-row">
             <input ref={nameRef} type="text" maxLength={12} placeholder="ANON" autoComplete="off" spellCheck={false} />
-            <button onClick={handleSubmit}>SAVE</button>
+            <button onClick={handleSubmit} disabled={saving}>{saving ? 'SAVING…' : 'SAVE'}</button>
           </div>
           <div className="email-entry-row">
             <input ref={emailRef} type="email" placeholder="email (optional · saves your streak)" autoComplete="email" />

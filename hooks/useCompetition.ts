@@ -1,9 +1,10 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, hasBackend } from '@/lib/supabase/client'
 import type { Competition, CompetitionLeaderboardRow } from '@/lib/game/types'
+import { fetchMe, getPlayerToken } from './useLeaderboard'
 
-const sb = createClient()
+const sb = hasBackend ? createClient() : null
 
 export interface CompetitionState {
   competition: Competition | null
@@ -27,29 +28,25 @@ export function useCompetition(playerId?: string | null): CompetitionState {
   useEffect(() => {
     let cancelled = false
     async function load() {
+      if (!sb) { setLoading(false); return }
       const { data: comp } = await sb
         .from('competitions')
         .select('*')
         .eq('active', true)
         .limit(1)
-        .single()
+        .maybeSingle()
 
       if (cancelled) return
       if (!comp) { setCompetition(null); setLoading(false); return }
       setCompetition(comp)
 
       if (playerId) {
-        const { data: entry } = await sb
-          .from('competition_entries')
-          .select('id')
-          .eq('competition_id', comp.id)
-          .eq('player_id', playerId)
-          .maybeSingle()
-        if (!cancelled) setIsEntered(!!entry)
+        const me = await fetchMe()
+        if (!cancelled) setIsEntered(me.enteredCompetitionIds.includes(comp.id))
       }
 
       const { data: lb } = await sb
-        .from('competition_leaderboard')
+        .from('competition_standings')
         .select('*')
         .eq('competition_id', comp.id)
         .order('current_rank', { ascending: true })
@@ -72,22 +69,22 @@ export function useCompetition(playerId?: string | null): CompetitionState {
 
 export async function enterCompetition(
   competitionId: string,
-  playerId: string,
   firstName: string,
   lastName: string,
   email: string,
   linkedinUrl?: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const { error } = await sb.from('competition_entries').insert({
-    competition_id: competitionId,
-    player_id: playerId,
-    first_name: firstName.trim(),
-    last_name: lastName.trim(),
-    email: email.trim(),
-    linkedin_url: linkedinUrl?.trim() || null,
-  })
-  if (error) return { ok: false, error: error.message }
-  return { ok: true }
+  try {
+    const res = await fetch('/api/competition/enter', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: getPlayerToken(), competitionId, firstName, lastName, email, linkedinUrl }),
+    })
+    if (res.ok) return { ok: true }
+    const body = await res.json().catch(() => ({}))
+    return { ok: false, error: body.error || 'Could not enter the competition.' }
+  } catch {
+    return { ok: false, error: 'Could not reach the server.' }
+  }
 }
 
 export function formatCountdown(endsAt: string): string {

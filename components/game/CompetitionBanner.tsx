@@ -51,7 +51,7 @@ export default function CompetitionBanner({ competition, playerId, isEntered, on
     }
     setSubmitting(true)
     setFormError('')
-    const result = await enterCompetition(competition.id, playerId, firstName, lastName, email, linkedin)
+    const result = await enterCompetition(competition.id, firstName, lastName, email, linkedin)
     setSubmitting(false)
     if (!result.ok) { setFormError(result.error || 'Something went wrong.'); return }
     setStep('success')

@@ -4,7 +4,7 @@ export function getBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
-export function shareUrl(scoreId: number): string {
+export function shareUrl(scoreId: string): string {
   const base = typeof window !== 'undefined' ? window.location.origin : getBaseUrl()
   return `${base}/s/${scoreId}`
 }
@@ -14,10 +14,13 @@ export function ogImageUrl(params: Record<string, string>): string {
   return `${getBaseUrl()}/api/og?${query}`
 }
 
-export function getReferredByScoreId(): number | null {
+// Score ids are bigint serials in this project; anything else in storage is ignored
+export const SCORE_ID = /^\d{1,18}$/
+
+export function getReferredByScoreId(): string | null {
   try {
     const val = sessionStorage.getItem('referredByScoreId')
-    return val ? parseInt(val, 10) : null
+    return val && SCORE_ID.test(val) ? val : null
   } catch {
     return null
   }

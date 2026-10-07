@@ -21,6 +21,9 @@ export async function createClient() {
   )
 }
 
+// False until the Supabase env vars are set; pages that read the database render empty instead of failing
+export const hasServerBackend = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY
+
 export function createServiceClient() {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

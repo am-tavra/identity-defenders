@@ -1,78 +1,83 @@
 'use client'
-import { createClient } from '@/lib/supabase/client'
+// Browser-side data access. Reads use public views; every write goes through /api routes.
+import { createClient, hasBackend } from '@/lib/supabase/client'
 import type { CachedScore, CachedPlayer } from '@/lib/game/types'
 import { MAX_SCORES } from '@/lib/game/constants'
 
-const supabase = createClient()
-
-export async function fetchTopScores(): Promise<CachedScore[]> {
-  const { data } = await supabase
-    .from('scores')
-    .select('name, score, wave, players(streak_days, total_plays)')
-    .order('score', { ascending: false })
-    .limit(MAX_SCORES)
-  if (!Array.isArray(data)) return []
-  return data.map((r: any) => ({
-    name: r.name, score: r.score, wave: r.wave,
-    streak_days: r.players?.streak_days || 0,
-    total_plays: r.players?.total_plays || 0,
-  }))
-}
-
-export async function fetchPlayer(token: string): Promise<CachedPlayer | null> {
-  const { data } = await supabase
-    .from('players')
-    .select('*')
-    .eq('token', token)
-    .limit(1)
-  return Array.isArray(data) && data.length ? data[0] : null
-}
-
-export async function upsertPlayer(token: string, name: string, score: number): Promise<CachedPlayer> {
-  const existing = await fetchPlayer(token)
-  const today = new Date().toISOString().split('T')[0]
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-  let streak = 1
-  if (existing) {
-    if (existing.last_played_date === today) streak = existing.streak_days
-    else if (existing.last_played_date === yesterday) streak = (existing.streak_days || 0) + 1
-  }
-  const payload = {
-    name, streak_days: streak, last_played_date: today,
-    best_score: existing ? Math.max(existing.best_score || 0, score) : score,
-    total_plays: (existing?.total_plays || 0) + 1,
-  }
-  if (existing) {
-    const { data } = await supabase.from('players').update(payload).eq('token', token).select()
-    return Array.isArray(data) && data.length ? data[0] : { ...existing, ...payload }
-  } else {
-    const { data } = await supabase.from('players').insert({ token, ...payload }).select()
-    return Array.isArray(data) && data.length ? data[0] : { token, ...payload } as CachedPlayer
-  }
-}
-
-export async function insertScore(
-  playerId: string,
-  name: string,
-  score: number,
-  wave: number,
-  referredByScoreId?: number | null,
-): Promise<number | null> {
-  const row: Record<string, unknown> = { player_id: playerId, name, score, wave }
-  if (referredByScoreId) row.referred_by_score_id = referredByScoreId
-  const { data } = await supabase
-    .from('scores')
-    .insert(row)
-    .select('id')
-  return Array.isArray(data) && data.length ? data[0].id : null
-}
-
-export async function insertLead(playerId: string, email: string) {
-  await supabase.from('leads').insert({ player_id: playerId, email, source: 'score_save' })
-}
+const supabase = hasBackend ? createClient() : null
 
 export function getPlayerToken(): string {
   let t = localStorage.getItem('id_defender_token')
   if (!t) { t = crypto.randomUUID(); localStorage.setItem('id_defender_token', t) }
   return t
+}
+
+export async function fetchTopScores(): Promise<CachedScore[]> {
+  if (!supabase) return []
+  const { data } = await supabase
+    .from('leaderboard_top')
+    .select('name, score, wave, streak_days, total_plays')
+    .order('score', { ascending: false })
+    .limit(MAX_SCORES)
+  return Array.isArray(data) ? data as CachedScore[] : []
+}
+
+export interface Me { player: CachedPlayer | null; enteredCompetitionIds: string[] }
+
+export async function fetchMe(): Promise<Me> {
+  if (!hasBackend) return { player: null, enteredCompetitionIds: [] }
+  try {
+    const res = await fetch(`/api/player?token=${getPlayerToken()}`)
+    if (res.ok) return await res.json()
+  } catch {}
+  return { player: null, enteredCompetitionIds: [] }
+}
+
+export async function fetchPlayer(): Promise<CachedPlayer | null> {
+  return (await fetchMe()).player
+}
+
+export async function startSession(): Promise<string | null> {
+  if (!hasBackend) return null
+  try {
+    const res = await fetch('/api/session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: getPlayerToken(), mobile: window.matchMedia('(pointer: coarse)').matches }),
+    })
+    if (res.ok) return (await res.json()).sessionId
+  } catch {}
+  return null
+}
+
+export type SubmitResult =
+  | { ok: true; scoreId: string; player: CachedPlayer }
+  | { ok: false; error: string }
+
+export async function submitScore(args: {
+  sessionId?: string | null; name: string; score: number; quarter: number
+  email?: string; referredBy?: string | null
+}): Promise<SubmitResult> {
+  if (!hasBackend) return { ok: false, error: 'No leaderboard is connected to this build.' }
+  if (!args.sessionId) return { ok: false, error: "This game wasn't registered with the server, so it can't be saved." }
+  try {
+    const res = await fetch('/api/score', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...args, token: getPlayerToken() }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (res.ok) return { ok: true, scoreId: body.scoreId, player: body.player }
+    return { ok: false, error: body.error || 'Could not save your score.' }
+  } catch {
+    return { ok: false, error: 'Could not reach the server. Check your connection.' }
+  }
+}
+
+// Fire-and-forget analytics
+export function track(name: 'page_view' | 'quarter_end' | 'game_over' | 'share', props: Record<string, unknown> = {}, sessionId?: string | null) {
+  if (!hasBackend) return
+  try {
+    const body = JSON.stringify({ name, props, sessionId: sessionId ?? null, token: getPlayerToken() })
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' }))
+    else fetch('/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true })
+  } catch {}
 }

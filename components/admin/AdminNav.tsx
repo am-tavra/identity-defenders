@@ -20,6 +20,7 @@ export default function AdminNav({ email, name, role }: Props) {
     { href: '/admin', label: 'DASHBOARD' },
     { href: '/admin/competitions', label: 'COMPETITIONS' },
     { href: '/admin/players', label: 'PLAYERS' },
+    { href: '/admin/analytics', label: 'ANALYTICS' },
   ]
 
   return (
