@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { UUID, EMAIL, bad, db, readJson, cleanHandle, findPlayer, logEvent, publicPlayer } from '@/lib/server/game'
 import { maxScoreFor, minSecondsFor } from '@/lib/game/limits'
+import { SCORE_ID } from '@/lib/url'
 
 const PER_TOKEN_PER_HOUR = 20
 const MAX_QUARTER = 99  // the game is endless; the scores.wave check constraint caps it in the database
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   const { data: row, error: sErr } = await sb.from('scores').insert({
     player_id: player.id, name, score, wave: quarter, session_id: sessionId,
-    referred_by_score_id: UUID.test(referredBy) ? referredBy : null,
+    referred_by_score_id: SCORE_ID.test(referredBy) ? Number(referredBy) : null,
   }).select('id').single()
   if (sErr || !row) return bad('could not save score', 500)
 
@@ -65,5 +66,5 @@ export async function POST(req: NextRequest) {
     await sb.from('leads').insert({ player_id: player.id, email, source: 'score_save' })
     await logEvent('email_captured', token, sessionId)
   }
-  return NextResponse.json({ scoreId: row.id, player: publicPlayer(player) })
+  return NextResponse.json({ scoreId: String(row.id), player: publicPlayer(player) })
 }

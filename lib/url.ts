@@ -14,13 +14,13 @@ export function ogImageUrl(params: Record<string, string>): string {
   return `${getBaseUrl()}/api/og?${query}`
 }
 
-// Score ids are uuids; anything else in storage is ignored
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+// Score ids are bigint serials in this project; anything else in storage is ignored
+export const SCORE_ID = /^\d{1,18}$/
 
 export function getReferredByScoreId(): string | null {
   try {
     const val = sessionStorage.getItem('referredByScoreId')
-    return val && UUID.test(val) ? val : null
+    return val && SCORE_ID.test(val) ? val : null
   } catch {
     return null
   }

@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
   ip_hash      text,
   started_at   timestamptz NOT NULL DEFAULT now(),
   submitted_at timestamptz,
-  score_id     uuid REFERENCES scores(id) ON DELETE SET NULL
+  score_id     bigint REFERENCES scores(id) ON DELETE SET NULL  -- scores.id is bigint in this project
 );
 CREATE INDEX IF NOT EXISTS game_sessions_token_idx ON game_sessions (player_token, started_at DESC);
 CREATE INDEX IF NOT EXISTS game_sessions_ip_idx    ON game_sessions (ip_hash, started_at DESC);
