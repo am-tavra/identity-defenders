@@ -22,6 +22,7 @@ export default function TitleScreen({ topScore, onStart }: TitleScreenProps) {
         <div className="briefing-row"><span className="key">P</span><span className="desc">Pause / resume</span></div>
       </div>
       <button className="start-btn" onClick={onStart}>INITIATE DEFENSE</button>
+      <a className="arcade-link" href="https://threatarcade.com" target="_blank" rel="noopener">MORE GAMES · THREAT ARCADE</a>
     </div>
   )
 }
